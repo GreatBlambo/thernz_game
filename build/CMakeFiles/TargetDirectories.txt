@@ -1,0 +1,3 @@
+C:/Users/Anthony/Downloads/temp/home/Anthony/thernz/build/CMakeFiles/edit_cache.dir
+C:/Users/Anthony/Downloads/temp/home/Anthony/thernz/build/CMakeFiles/rebuild_cache.dir
+C:/Users/Anthony/Downloads/temp/home/Anthony/thernz/build/CMakeFiles/ThernzGame.dir
