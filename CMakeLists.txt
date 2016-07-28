@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.2 FATAL_ERROR)
-project(ThernzGame VERSION 0.1 LANGUAGES CXX)
+project(thernz_game VERSION 0.1 LANGUAGES CXX)
 
 set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake/Modules" ${CMAKE_MODULE_PATH})
 
@@ -7,7 +7,7 @@ set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake/Modules" ${CMAKE_MODULE
 
 set(SOURCES main.cpp)
 
-add_executable(ThernzGame ${SOURCES})
+add_executable(thernz_game ${SOURCES})
 
 # Import libraries
 
@@ -26,7 +26,7 @@ set_property(TARGET sdl2 PROPERTY INTERFACE_LINK_LIBRARIES ${SDL2_LIBRARY})
 
 set_property(TARGET sdl2 PROPERTY INTERFACE_INCLUDE_DIRECTORIES ${SDL2_INCLUDE_DIRS})
 
-target_link_libraries(ThernzGame
+target_link_libraries(thernz_game
   opengl
   glew
   sdl2)
