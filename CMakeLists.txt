@@ -9,6 +9,9 @@ set(SOURCES main.cpp)
 
 add_executable(thernz_game ${SOURCES})
 
+# Copy assets folder
+file(COPY assets DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
+
 # Import libraries
 
 find_package(OpenGL REQUIRED)
@@ -23,10 +26,16 @@ set_property(TARGET glew PROPERTY IMPORTED_LOCATION ${GLEW_LIBRARY})
 add_library(sdl2 INTERFACE IMPORTED)
 find_package(SDL2 REQUIRED STATIC)
 set_property(TARGET sdl2 PROPERTY INTERFACE_LINK_LIBRARIES ${SDL2_LIBRARY})
-
 set_property(TARGET sdl2 PROPERTY INTERFACE_INCLUDE_DIRECTORIES ${SDL2_INCLUDE_DIRS})
+
+add_library(sdl2_image INTERFACE IMPORTED)
+find_package(SDL2_image REQUIRED STATIC)
+set_property(TARGET sdl2_image PROPERTY INTERFACE_LINK_LIBRARIES ${SDL2IMAGE_LIBRARY})
+
+# Link target libraries
 
 target_link_libraries(thernz_game
   opengl
   glew
-  sdl2)
+  sdl2
+  sdl2_image)
