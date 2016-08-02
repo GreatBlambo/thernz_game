@@ -5,7 +5,10 @@ set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake/Modules" ${CMAKE_MODULE
 
 # Source files
 
-set(SOURCES main.cpp)
+set(SOURCES main.cpp
+            rendering.cpp
+            memory.cpp
+            error_codes.cpp)
 
 add_executable(thernz_game ${SOURCES})
 

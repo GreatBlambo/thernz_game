@@ -2,41 +2,49 @@
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
 
-#define NO_ERROR 0
-#define ERROR_SDL 1
-#define ERROR_NULL_PARAM 2
+#include "rendering.h"
+#include "error_codes.h"
 
 #define SCREEN_WIDTH 800
 #define SCREEN_HEIGHT 600
 
-struct GameWindow
+struct Game
 {
-  SDL_Window* window;
-  SDL_Surface* screen_surface;
-  SDL_Renderer* renderer;
+  const char* name;
+  Graphics graphics;
 };
 
-int init_game(GameWindow* game_window);
-void destroy_game(GameWindow* game_window);
-
-SDL_Surface* load_as_surface(const char* pathname, const SDL_Surface* screen_surface);
-SDL_Texture* load_as_texture(const char* pathname, SDL_Renderer* renderer);
+GameError init_game(Game* game, const char* name
+                    , float width, float height
+                    , bool fullscreen
+                    , float pos_x = SDL_WINDOWPOS_UNDEFINED, float pos_y = SDL_WINDOWPOS_UNDEFINED);
+GameError update_game(Game* game);
+GameError destroy_game(Game* game);
 
 int main(int, char**)
 {
-  GameWindow game_window;
-  int err = init_game(&game_window);
-  if (err)
-    return 1;
+  GameError err = NO_ERROR;
+
+  Game game;
+  if (err = init_game(&game, "Thernz Game"
+                      , SDL_WINDOWPOS_CENTERED
+                      , SDL_WINDOWPOS_CENTERED
+                      , false
+                      , SCREEN_WIDTH
+                      , SCREEN_HEIGHT))
+    return err;
   
-  SDL_Texture* stork_image = load_as_texture("assets/bird.png", game_window.renderer);
+  TextureID stork_image = load_image_as_texture("assets/bird.png");
   if (!stork_image)
-    return 1;
-  SDL_Rect stretch_rect;
-  stretch_rect.x = 0;
-  stretch_rect.y = 0;
-  stretch_rect.w = SCREEN_WIDTH;
-  stretch_rect.h = SCREEN_HEIGHT;
+    return ERROR_SDL;
+
+  Color screen_clear_color;
+  screen_clear_color.r = 0.0;
+  screen_clear_color.g = 0.2;
+  screen_clear_color.b = 0.3;
+  screen_clear_color.a = 1.0;
+
+  clear_color(&screen_clear_color);
   
   bool quit = false;
   SDL_Event e;
@@ -52,118 +60,40 @@ int main(int, char**)
           quit = true;
       }
     }
-    SDL_RenderClear(game_window.renderer);
-    SDL_RenderCopy(game_window.renderer, stork_image, NULL, &stretch_rect);
-    SDL_RenderPresent(game_window.renderer);
+    clear_color(&screen_clear_color);
+    update_game(&game);
   }
-  SDL_DestroyTexture(stork_image);
-  
-  destroy_game(&game_window);
+  destroy_texture(stork_image);
+  destroy_game(&game);
   return 0;
 }
 
-SDL_Texture* load_as_texture(const char* pathname, SDL_Renderer* renderer)
+GameError init_game(Game* game, const char* name
+                    , float width, float height
+                    , bool fullscreen
+                    , float pos_x, float pos_y)
 {
-  //The final texture
-  SDL_Texture* new_texture = NULL;
-
-  //Load image at specified path
-  SDL_Surface* loaded_surface = IMG_Load(pathname);
-  if(loaded_surface == NULL)
-  {
-    printf("Unable to load image %s! SDL_image Error: %s\n", pathname, IMG_GetError());
-    return NULL;
-  }
-  //Create texture from surface pixels
-  new_texture = SDL_CreateTextureFromSurface(renderer, loaded_surface);
-  if(new_texture == NULL)
-  {
-    printf( "Unable to create texture from %s! SDL Error: %s\n", pathname, SDL_GetError());
-  }
-  
-  //Get rid of old loaded surface
-  SDL_FreeSurface( loaded_surface );
-
-  return new_texture;
-}
-
-SDL_Surface* load_as_surface(const char* pathname, const SDL_Surface* screen_surface)
-{
-  if (!screen_surface)
-    return NULL;
-  //The final optimized image
-  SDL_Surface* optimized_surface = NULL;
-
-  //Load image at specified path
-  SDL_Surface* loaded_surface = IMG_Load(pathname);
-  if(!loaded_surface)
-  {
-    printf("Unable to load image %s! SDL_image Error: %s\n", pathname, IMG_GetError());
-    return NULL;
-  }
-  //Convert surface to screen format
-  optimized_surface = SDL_ConvertSurface(loaded_surface, screen_surface->format, 0);
-  if( optimized_surface == NULL )
-  {
-    printf( "Unable to optimize image %s! SDL Error: %s\n", pathname, SDL_GetError());
-  }
-  
-  //Get rid of old loaded surface
-  SDL_FreeSurface(loaded_surface);
-
-  return optimized_surface;
-}
-
-int init_game(GameWindow* game_window)
-{
-  if (!game_window)
+  if (!game || !name)
     return ERROR_NULL_PARAM;
-
-  // Load modules
-  if (SDL_Init(SDL_INIT_VIDEO) < 0)
-  {
-    printf("SDL_Init Error: %s", SDL_GetError());
-    return ERROR_SDL;
-  }
-
-  int img_flags = IMG_INIT_PNG;
-  if(!(IMG_Init(img_flags) & img_flags))
-  {
-    printf( "SDL_image could not initialize! SDL_image Error: %s\n", IMG_GetError() );
-    return ERROR_SDL;
-  }
-
-  // Create game window
-  game_window->window = SDL_CreateWindow("SDL Tutorial",
-                                         SDL_WINDOWPOS_UNDEFINED,
-                                         SDL_WINDOWPOS_UNDEFINED,
-                                         SCREEN_WIDTH,
-                                         SCREEN_HEIGHT,
-                                         SDL_WINDOW_SHOWN);
-  if (!game_window->window)
-  {
-    printf("Window could not be created! SDL_Error: %s\n", SDL_GetError());
-    return ERROR_SDL;
-  }
-  game_window->screen_surface = SDL_GetWindowSurface(game_window->window);
-
-  game_window->renderer = SDL_CreateRenderer(game_window->window, -1, SDL_RENDERER_ACCELERATED );
-  if (!game_window->renderer)
-  {
-    printf( "Renderer could not be created! SDL Error: %s\n", SDL_GetError());
-    return ERROR_SDL;
-  }
-  SDL_SetRenderDrawColor(game_window->renderer, 0xFF, 0xFF, 0xFF, 0xFF);
-  
-  return NO_ERROR;
+  if (!graphics_is_valid(&game->graphics))
+    return ERROR_INVALID_PARAM;
+  GameError err = NO_ERROR;
+  game->name = name;
+  if (err = init_graphics(&game->graphics
+                          , name
+                          , width, height
+                          , fullscreen
+                          , pos_x, pos_y))
+    return err;
+  return err;
 }
 
-void destroy_game(GameWindow* game_window)
+GameError update_game(Game* game)
 {
-  SDL_DestroyRenderer(game_window->renderer);
-  SDL_FreeSurface(game_window->screen_surface);
-  SDL_DestroyWindow(game_window->window);
-  game_window->screen_surface = NULL;
-  game_window->window = NULL;
-  SDL_Quit();
+  SDL_GL_SwapWindow(game->graphics.main_window);
+}
+
+GameError destroy_game(Game* game)
+{
+  destroy_graphics(&game->graphics);
 }

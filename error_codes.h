@@ -1,0 +1,12 @@
+#pragma once
+
+enum GameError
+{
+  NO_ERROR,
+  ERROR_SDL,
+  ERROR_GLEW,
+  ERROR_OPENGL,
+  ERROR_NULL_PARAM,
+  ERROR_BUFFER_SIZE,
+  ERROR_INVALID_PARAM
+};
