@@ -7,9 +7,10 @@ set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake/Modules" ${CMAKE_MODULE
 
 set(SOURCES main.cpp
             rendering.cpp
+            render_functions.cpp
+            graphics.cpp
             memory.cpp
             error_codes.cpp)
-
 add_executable(thernz_game ${SOURCES})
 
 # Copy assets folder
@@ -26,14 +27,16 @@ add_library(glew STATIC IMPORTED)
 set_property(TARGET glew PROPERTY INTERFACE_INCLUDE_DIRECTORIES ${GLEW_INCLUDE_DIRS})
 set_property(TARGET glew PROPERTY IMPORTED_LOCATION ${GLEW_LIBRARY})
 
-add_library(sdl2 INTERFACE IMPORTED)
 find_package(SDL2 REQUIRED STATIC)
+add_library(sdl2 INTERFACE IMPORTED)
 set_property(TARGET sdl2 PROPERTY INTERFACE_LINK_LIBRARIES ${SDL2_LIBRARY})
 set_property(TARGET sdl2 PROPERTY INTERFACE_INCLUDE_DIRECTORIES ${SDL2_INCLUDE_DIRS})
 
-add_library(sdl2_image INTERFACE IMPORTED)
 find_package(SDL2_image REQUIRED STATIC)
+add_library(sdl2_image INTERFACE IMPORTED)
 set_property(TARGET sdl2_image PROPERTY INTERFACE_LINK_LIBRARIES ${SDL2IMAGE_LIBRARY})
+
+find_package(GLM REQUIRED STATIC)
 
 # Link target libraries
 
@@ -41,4 +44,5 @@ target_link_libraries(thernz_game
   opengl
   glew
   sdl2
-  sdl2_image)
+  sdl2_image
+  glm)
