@@ -6,14 +6,27 @@
 #include "error_codes.h"
 #include "memory.h"
 
+// Utils
+struct Color
+{
+  float r;
+  float g;
+  float b;
+  float a;
+};
+
+void clear_color(Color* color);
+
+// Textures
+typedef GLuint TextureID;
+TextureID load_image_as_texture(const char* pathname);
+void destroy_texture(TextureID texture);
+
+// Windows and Graphics
 SDL_Window* create_window(const char* window_name
                           , float width, float height
                           , bool fullscreen
                           , float pos_x = SDL_WINDOWPOS_UNDEFINED, float pos_y = SDL_WINDOWPOS_UNDEFINED);
-
-typedef GLuint TextureID;
-TextureID load_image_as_texture(const char* pathname);
-void destroy_texture(TextureID texture);
 
 struct Graphics
 {
@@ -28,13 +41,3 @@ GameError init_graphics(Graphics* graphics
                         , bool fullscreen
                         , float pos_x = SDL_WINDOWPOS_UNDEFINED, float pos_y = SDL_WINDOWPOS_UNDEFINED);
 GameError destroy_graphics(Graphics* graphics);
-
-struct Color
-{
-  float r;
-  float g;
-  float b;
-  float a;
-};
-
-void clear_color(Color* color);

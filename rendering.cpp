@@ -4,25 +4,6 @@
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
 
-SDL_Window* create_window(const char* window_name
-                          , float width, float height
-                          , bool fullscreen
-                          , float pos_x, float pos_y)
-{
-  const char* name = "";
-  if (name)
-    name = window_name;
-  
-  Uint32 flags = SDL_WINDOW_OPENGL;
-  if (fullscreen)
-    flags = flags | SDL_WINDOW_FULLSCREEN;
-  
-  return SDL_CreateWindow(name,
-                          pos_x, pos_y,
-                          width, height,
-                          flags);
-}
-
 TextureID load_image_as_texture(const char* pathname)
 {
   //Load image at specified path
@@ -57,6 +38,25 @@ TextureID load_image_as_texture(const char* pathname)
 void destroy_texture(TextureID texture)
 {
   glDeleteTextures(1, &texture);
+}
+
+SDL_Window* create_window(const char* window_name
+                          , float width, float height
+                          , bool fullscreen
+                          , float pos_x, float pos_y)
+{
+  const char* name = "";
+  if (name)
+    name = window_name;
+  
+  Uint32 flags = SDL_WINDOW_OPENGL;
+  if (fullscreen)
+    flags = flags | SDL_WINDOW_FULLSCREEN;
+  
+  return SDL_CreateWindow(name,
+                          pos_x, pos_y,
+                          width, height,
+                          flags);
 }
 
 bool graphics_is_valid(Graphics* graphics)
