@@ -127,4 +127,5 @@ GameError destroy_graphics(Graphics* graphics)
   SDL_GL_DeleteContext(graphics->context);
   SDL_DestroyWindow(graphics->main_window);
   SDL_Quit();
+  return NO_ERROR;
 }

@@ -8,6 +8,17 @@
 #define SCREEN_WIDTH 800
 #define SCREEN_HEIGHT 600
 
+////////////////////////////////////////////////////////////////////////////////
+// TODO ////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+/*******************************************************************************
+ * 1. Finish off sprite rendering and the renderer.
+ * 2. GameApi struct that contains function pointers for when the game starts,
+ *    when the game finishes, and when it's updating.
+ * 3. Clean up the code a bit.
+/******************************************************************************/
+////////////////////////////////////////////////////////////////////////////////
+
 struct Game
 {
   const char* name;
@@ -31,19 +42,18 @@ int main(int, char**)
   GameError err = NO_ERROR;
 
   Game game;
-  if (err = init_game(&game, "Thernz Game"
-                      , SCREEN_WIDTH
-                      , SCREEN_HEIGHT
-                      , false
-                      , SDL_WINDOWPOS_CENTERED
-                      , SDL_WINDOWPOS_CENTERED))
-    return err;
+  CHECK_ERR_TRACE_RETURN(err, init_game(&game, "Thernz Game"
+                                    , SCREEN_WIDTH
+                                    , SCREEN_HEIGHT
+                                    , false
+                                    , SDL_WINDOWPOS_CENTERED
+                                    , SDL_WINDOWPOS_CENTERED));
   
-  if (err = on_game_start(&game)) return err;
-  if (err = run_game(&game)) return err;
-  if (err = on_game_finish(&game)) return err;
+  CHECK_ERR_TRACE_RETURN(err, on_game_start(&game));
+  CHECK_ERR_TRACE_RETURN(err, run_game(&game));
+  CHECK_ERR_TRACE_RETURN(err, on_game_finish(&game));
   
-  if (err = destroy_game(&game)) return err;
+  CHECK_ERR_TRACE_RETURN(err, destroy_game(&game));
   return 0;
 }
 
@@ -71,11 +81,18 @@ GameError init_game(Game* game, const char* name
 struct GameData
 {
   TextureID stork_image;
+  Renderer renderer;
+  Buffer main_memory;
 };
 
 GameError on_game_start(Game* game)
 {
-  GameData* game_data = (GameData*) malloc(sizeof(GameData));
+  GameError err = NO_ERROR;
+  Buffer main_memory;
+  
+  if (err = create_buffer(&main_memory, malloc(GIGABYTE(1)), GIGABYTE(1))) return err;
+  
+  GameData* game_data = push_struct<GameData>(&main_memory);
   if (!game_data)
     return ERROR_ALLOC_FAIL;
 
@@ -83,9 +100,11 @@ GameError on_game_start(Game* game)
   if (!game_data->stork_image)
     return ERROR_SDL;
 
-  game->state_data = (void*) game_data;
-  
-  return NO_ERROR;
+  game_data->main_memory = main_memory;
+  if (err = create_renderer(&game_data->renderer, &game_data->main_memory, 2048, MEGABYTE(50))) return err;
+
+  game->state_data = (void*) game_data;  
+  return err;
 }
 
 GameError on_game_finish(Game* game)
@@ -116,6 +135,11 @@ GameError run_game(Game* game)
 bool update_game(Game* game)
 {
   static Color screen_clear_color = { 0.0, 0.2, 0.3, 1.0 };
+
+  GameData* game_data = (GameData*) game->state_data;
+  if (!game_data)
+    return ERROR_NULL_PARAM;
+
   while (SDL_PollEvent(&game->e) != 0)
   {
     switch(game->e.type)
@@ -133,6 +157,7 @@ bool update_game(Game* game)
       break;
     }
   }
+  render(&game_data->renderer);
   clear_color(&screen_clear_color);
   SDL_GL_SwapWindow(game->graphics.main_window);
   return false;
@@ -140,5 +165,7 @@ bool update_game(Game* game)
 
 GameError destroy_game(Game* game)
 {
-  destroy_graphics(&game->graphics);
+  GameError err = NO_ERROR;
+  CHECK_ERR_RETURN(err, destroy_graphics(&game->graphics));
+  return err;
 }

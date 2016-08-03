@@ -11,6 +11,9 @@ struct Color
 };
 
 typedef GLuint TextureID;
+typedef GLuint VertexBufferID;
+typedef GLuint VertexArrayID;
+typedef GLuint IndexArrayID;
 
 struct Sprite
 {

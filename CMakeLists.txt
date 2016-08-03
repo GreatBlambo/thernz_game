@@ -36,7 +36,7 @@ find_package(SDL2_image REQUIRED STATIC)
 add_library(sdl2_image INTERFACE IMPORTED)
 set_property(TARGET sdl2_image PROPERTY INTERFACE_LINK_LIBRARIES ${SDL2IMAGE_LIBRARY})
 
-find_package(GLM REQUIRED STATIC)
+find_package(glm REQUIRED STATIC)
 
 # Link target libraries
 
