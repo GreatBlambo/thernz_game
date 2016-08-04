@@ -1,5 +1,6 @@
 #pragma once
-#include <cstddef>
+#include <stddef.h>
+#include <stdint.h>
 
 #include "error_codes.h"
 #define DEFAULT_ALIGN 4
@@ -34,6 +35,17 @@ inline T* push_array(Buffer* source, size_t length, size_t align = DEFAULT_ALIGN
   return (T*) push_size(source, sizeof(T) * length, align);
 }
 
-inline size_t buffer_get_remaining(const Buffer* buffer);
-inline void* buffer_get_offset_pointer(const Buffer* buffer);
-inline void buffer_reset(Buffer*);
+inline size_t buffer_get_remaining(const Buffer* buffer)
+{
+  return buffer->size - buffer->offset;
+}
+
+inline void* buffer_get_offset_pointer(const Buffer* buffer)
+{
+  return (void*) ((uint8_t*) buffer->start + buffer->offset);
+}
+
+inline void buffer_reset(Buffer* buffer) 
+{
+  buffer->offset = 0;
+}

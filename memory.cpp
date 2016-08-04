@@ -1,25 +1,9 @@
 #include "memory.h"
 #include "stdint.h"
 
-size_t buffer_get_remaining(const Buffer* buffer)
+static inline void* align_forward(void* ptr, size_t align = DEFAULT_ALIGN)
 {
-  return buffer->size - buffer->offset;
-}
-
-void* buffer_get_offset_pointer(const Buffer* buffer)
-{
-  return (void*) ((uint8_t*) buffer->start + buffer->offset);
-}
-
-inline void* align_forward(void* ptr, size_t align = DEFAULT_ALIGN)
-{
-  uintptr_t p = uintptr_t(ptr);
-  const uint32_t mod = p % align;
-  if (mod)
-  {
-    p -=  mod;
-  }
-  return (void*) p;
+  return (void*) ((uintptr_t(ptr) + align - 1) & ~(align - 1));
 }
 
 GameError create_buffer(Buffer* buffer, void* data, size_t size)
@@ -51,9 +35,4 @@ void* push_size(Buffer* buffer, size_t size, size_t align)
 
   buffer->offset = new_offset;
   return result;
-}
-
-inline void buffer_reset(Buffer* buffer)
-{
-  buffer->offset = 0;
 }
