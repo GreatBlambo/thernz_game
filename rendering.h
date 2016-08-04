@@ -4,9 +4,9 @@
 
 struct CommandBuffer
 {
-  Buffer buf_command_data;
+  Buffer* frame_memory;
 };
 
-struct RenderBin
+void create_command_buffer(Buffer* perm_memory, Buffer* frame_memory)
 {
-};
+}

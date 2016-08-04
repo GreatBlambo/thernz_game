@@ -9,18 +9,6 @@
 #define SCREEN_WIDTH 800
 #define SCREEN_HEIGHT 600
 
-////////////////////////////////////////////////////////////////////////////////
-// TODO ////////////////////////////////////////////////////////////////////////
-////////////////////////////////////////////////////////////////////////////////
-/*******************************************************************************
- * - Finish off sprite rendering and the renderer.
- * - GameApi struct that contains function pointers for when the game starts,
- *    when the game finishes, and when it's updating.
- * - Clean up the code a bit.
- * - Command buffers must be PER-THREAD.
-/******************************************************************************/
-////////////////////////////////////////////////////////////////////////////////
-
 struct Game
 {
   //temp

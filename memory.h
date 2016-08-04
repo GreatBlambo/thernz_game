@@ -1,6 +1,7 @@
 #pragma once
 #include <stddef.h>
 #include <stdint.h>
+#include <atomic>
 
 #include "error_codes.h"
 #define DEFAULT_ALIGN 4
@@ -18,6 +19,7 @@ struct Buffer
 
 GameError create_buffer(Buffer* buffer, void* data, size_t size);
 void* push_size(Buffer* buffer, size_t size, size_t align = DEFAULT_ALIGN);
+
 inline GameError push_buffer(Buffer* source, Buffer* result, size_t size, size_t align = DEFAULT_ALIGN)
 {
   return create_buffer(result, push_size(source, size, align), size);
@@ -49,3 +51,15 @@ inline void buffer_reset(Buffer* buffer)
 {
   buffer->offset = 0;
 }
+
+////////////////////////////////////////////////////////////////////////////////
+// FrameMemory
+////////////////////////////////////////////////////////////////////////////////
+
+struct FrameMemory
+{
+  void* start;
+  size_t size;
+  std::atomic_size_t offset;
+};
+
