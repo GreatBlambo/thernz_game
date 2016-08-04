@@ -16,15 +16,22 @@
  * 2. GameApi struct that contains function pointers for when the game starts,
  *    when the game finishes, and when it's updating.
  * 3. Clean up the code a bit.
+ * 4. Consider double buffering instead of lock
 /******************************************************************************/
 ////////////////////////////////////////////////////////////////////////////////
 
 struct Game
 {
+  //temp
+  Sprite sprite;
+
+  //non-temp
   const char* name;
   Graphics graphics;
   SDL_Event e;
-  void* state_data;
+  
+  SpriteBatch sprite_batch;
+  Buffer main_memory;  
 };
 
 GameError init_game(Game* game, const char* name
@@ -78,32 +85,38 @@ GameError init_game(Game* game, const char* name
   return err;
 }
 
-struct GameData
-{
-  TextureID stork_image;
-  Renderer renderer;
-  Buffer main_memory;
-};
-
 GameError on_game_start(Game* game)
 {
   GameError err = NO_ERROR;
   Buffer main_memory;
-  
+
   if (err = create_buffer(&main_memory, malloc(GIGABYTE(1)), GIGABYTE(1))) return err;
-  
-  GameData* game_data = push_struct<GameData>(&main_memory);
-  if (!game_data)
-    return ERROR_ALLOC_FAIL;
 
-  game_data->stork_image = load_image_as_texture("assets/bird.png");
-  if (!game_data->stork_image)
+  game->sprite.texture = load_image_as_texture("assets/bird.png");
+  if (!game->sprite.texture)
     return ERROR_SDL;
+  game->sprite.rect.x = 0;
+  game->sprite.rect.y = 0;
+  game->sprite.rect.w = 100;
+  game->sprite.rect.h = 100;
 
-  game_data->main_memory = main_memory;
-  if (err = create_renderer(&game_data->renderer, &game_data->main_memory, 2048, MEGABYTE(50))) return err;
+  ShaderID shaders[2];
+  shaders[0] = load_shader_source("assets/shaders/test.vert", GL_VERTEX_SHADER);
+  shaders[1] = load_shader_source("assets/shaders/test.frag", GL_FRAGMENT_SHADER);
+  if (!shaders[0] || !shaders[1])
+    return ERROR_OPENGL;
+  
+  game->sprite.shader_program = link_shader_program(shaders, 2);
+  if (!game->sprite.shader_program)
+    return ERROR_OPENGL;
 
-  game->state_data = (void*) game_data;  
+  game->main_memory = main_memory;
+  if (err = create_sprite_batch(&game->sprite_batch, &game->main_memory, 2048)) return ERROR_BUFFER_SIZE;
+
+  //cleanup  
+  detach_shaders(game->sprite.shader_program, shaders, 2); 
+  destroy_shader(shaders[0]);
+  destroy_shader(shaders[1]);
   return err;
 }
 
@@ -111,24 +124,11 @@ GameError on_game_finish(Game* game)
 {
   if (!game)
     return ERROR_NULL_PARAM;
-  GameData* game_data = (GameData*) game->state_data;
-  if (!game_data)
-    return ERROR_NULL_PARAM;
 
-  destroy_texture(game_data->stork_image);
-  free(game_data);
+  destroy_texture(game->sprite.texture);
+  destroy_program(game->sprite.shader_program);
+  free(game->main_memory.start);
 
-  return NO_ERROR;
-}
-
-GameError run_game(Game* game)
-{
-  bool quit = false;
-  while(!quit)
-  {
-    quit = update_game(game);
-  }
-  
   return NO_ERROR;
 }
 
@@ -136,8 +136,7 @@ bool update_game(Game* game)
 {
   static Color screen_clear_color = { 0.0, 0.2, 0.3, 1.0 };
 
-  GameData* game_data = (GameData*) game->state_data;
-  if (!game_data)
+  if (!game)
     return ERROR_NULL_PARAM;
 
   while (SDL_PollEvent(&game->e) != 0)
@@ -157,11 +156,24 @@ bool update_game(Game* game)
       break;
     }
   }
-  render(&game_data->renderer);
+  
+  render(&game->sprite_batch);
   clear_color(&screen_clear_color);
   SDL_GL_SwapWindow(game->graphics.main_window);
   return false;
 }
+
+GameError run_game(Game* game)
+{
+  bool quit = false;
+  while(!quit)
+  {
+    quit = update_game(game);
+  }
+  
+  return NO_ERROR;
+}
+
 
 GameError destroy_game(Game* game)
 {

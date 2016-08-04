@@ -20,11 +20,25 @@ struct Graphics
   SDL_Window* main_window;
 };
 
+////////////////////////////////////////////////////////////////////////////////
+// Assets
+////////////////////////////////////////////////////////////////////////////////
+
 // Textures
 TextureID load_image_as_texture(const char* pathname);
 void destroy_texture(TextureID texture);
 
+// Shaders
+ShaderID load_shader_source(const char* pathname, GLenum shader_type);
+void destroy_shader(ShaderID shader);
+ShaderProgramID link_shader_program(ShaderID* shaders, size_t num_shaders);
+void destroy_program(ShaderProgramID program);
+GameError detach_shaders(ShaderProgramID program, ShaderID* shaders, size_t num_shaders);
+
+////////////////////////////////////////////////////////////////////////////////
 // Windows and Graphics
+////////////////////////////////////////////////////////////////////////////////
+
 SDL_Window* create_window(const char* window_name, float width, float height, bool fullscreen, float pos_x = SDL_WINDOWPOS_UNDEFINED, float pos_y = SDL_WINDOWPOS_UNDEFINED);
 
 bool graphics_is_valid(Graphics* graphics);

@@ -11,10 +11,15 @@ set(SOURCES main.cpp
             graphics.cpp
             memory.cpp
             error_codes.cpp)
+
 add_executable(thernz_game ${SOURCES})
 
 # Copy assets folder
-file(COPY assets DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
+file(GLOB_RECURSE ASSETS ${CMAKE_CURRENT_SOURCE_DIR}/assets/*)
+add_custom_target(assets ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/assets assets
+                         SOURCES ${ASSETS})
+
+add_dependencies(thernz_game assets)
 
 # Import libraries
 

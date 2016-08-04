@@ -15,8 +15,13 @@ typedef GLuint VertexBufferID;
 typedef GLuint VertexArrayID;
 typedef GLuint IndexArrayID;
 
+typedef GLuint ShaderID;
+typedef GLuint ShaderProgramID;
+
 struct Sprite
 {
   TextureID texture;
   SDL_Rect rect;
+
+  ShaderProgramID shader_program;
 };
