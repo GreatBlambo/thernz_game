@@ -8,6 +8,10 @@
   - Read/Write locks for controlling swap while write? Or that
     "reverse semaphore"
   - Switch to POD atomic.
+  - Conditions:
+    - You cannot swap while a write is occurring
+    - You cannot write while a swap is occurring
+    - You MUST be able to write while another write is occurring
 ** TODO GameApi struct that contains function pointers
    - FPs for when the game starts and finishes, and when it's updating.
 ** TODO Clean up the code a bit

@@ -1,4 +1,5 @@
 #include <atomic>
+#include <thread>
 
 #include "memory.h"
 #include "error_codes.h"
@@ -36,9 +37,12 @@ struct GenericCommandBuffer
   SortItem<Key>* result_keys;
 
   CommandArray<Key> command_arrays[NUM_ARRAYS];
-  size_t current_array;
+  std::atomic_size_t current_array;
   
   size_t max_commands;
+
+  std::atomic_size_t num_writing;
+  bool is_swapping;
 }; 
 
 template <typename Key>
@@ -57,7 +61,7 @@ GameError create_command_buffer(GenericCommandBuffer<Key>* result, size_t max_co
   result->frame_memory = frame_memory;
   result->result_keys = push_array< SortItem<Key> >(perm_memory, max_commands);
 
-  // Allocate the two buffers
+  // Allocate the buffers
   for (int i = 0; i < NUM_ARRAYS; i++)
   {
     result->command_arrays[i]->sort_keys = push_array< SortItem<Key> >(perm_memory, max_commands);
@@ -66,6 +70,8 @@ GameError create_command_buffer(GenericCommandBuffer<Key>* result, size_t max_co
   }
   result->max_commands = max_commands;
   result->current_array = 0;
+  result->num_writing = 0;
+  result->is_swapping = 0;
 
   return NO_ERROR;
 }
@@ -80,39 +86,37 @@ template <typename Key>
 GameError command_buffer_submit_command(GenericCommandBuffer<Key>* command_buffer,
                                         DispatchFunction<Key> dispatch_function,
                                         Key key, void* params, void* data, size_t size)
-{
+{  
   // Get current array
-  CommandArray<Key>* current_array = &command_buffer->command_arrays[command_buffer->current_array];
+  CommandArray<Key>* back_array = &command_buffer->command_arrays[(command_buffer->current_array + 1) % NUM_ARRAYS];
 
   // Get offset
   // Gets CURRENT value of num_commands and atomically adds to it.
-  size_t current_index = current_array->num_commands.fetch_add();
+  size_t current_index = back_array->num_commands.fetch_add();
   // If that value was previously greater than the maximum allowed commands, reset to max and
   // return
   if (current_index >= command_buffer->max_commands)
   {
-    current_array->num_commands = command_buffer->max_commands;
+    back_array->num_commands = command_buffer->max_commands;
     return ERROR_ARRAY_SIZE;
   }
-
-  // critical section for rw lock during swap
-  GenericCommand<Key>* command = current_array->commands + current_index;
+  
+  GenericCommand<Key>* command = back_array->commands + current_index;
   command->dispatch_function = dispatch_function;
   command->params = params;
   command->data = data;
   command->size = size;
 
-  SortItem<Key>* sort_item = current_array->sort_keys + current_index;
+  SortItem<Key>* sort_item = back_array->sort_keys + current_index;
   sort_item->index = current_index;
   sort_item->sort_key = key;
-  // end
   
   return NO_ERROR;
 }
 
 template <typename Key>
-GameError command_buffer_render(GenericCommandBuffer<Key>* command_buffer)
-{
+GameError command_buffer_process(GenericCommandBuffer<Key>* command_buffer)
+{  
   // Get current array
   CommandArray<Key>* current_array = &command_buffer->command_arrays[command_buffer->current_array];
 
@@ -128,11 +132,11 @@ GameError command_buffer_render(GenericCommandBuffer<Key>* command_buffer)
     command = current_array->commands + result_key.index;
     command->dispatch_function(result_key->key, command->params, command->data, command->size);
   }
-
-  // swap here
-  // rw critical section
-  command_buffer->current_array = (command_buffer->current_array) % NUM_ARRAYS;
-  // rw critical section end
   
   return NO_ERROR;
+}
+
+void command_buffer_swap(GenericCommandBuffer<Key>* command_buffer)
+{
+  command_buffer->current_array = (command_buffer->current_array + 1) % NUM_ARRAYS;
 }
