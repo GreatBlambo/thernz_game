@@ -1,5 +1,13 @@
-- Finish off sprite rendering and the renderer.
-- GameApi struct that contains function pointers for when the
-  game starts.
-  when the game finishes, and when it's updating.
-- Clean up the code a bit.
+* Tasks
+** TODO Finish off sprite rendering and the renderer.
+  - Make API so that pushing a command accepts any buffer, not
+    just the frame data buffer in CommandBuffer
+  - Command buffer should contain two arrays of commands for
+    double buffering. Should increment a semaphore when
+    submitting a command, which the render function waits on.
+  - Read/Write locks for controlling swap while write? Or that
+    "reverse semaphore"
+  - Switch to POD atomic.
+** TODO GameApi struct that contains function pointers
+   - FPs for when the game starts and finishes, and when it's updating.
+** TODO Clean up the code a bit
