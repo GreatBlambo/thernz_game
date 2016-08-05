@@ -8,6 +8,8 @@
 
 #define SCREEN_WIDTH 800
 #define SCREEN_HEIGHT 600
+#define GAME_NAME "Thernz Game"
+#define FULLSCREEN false
 
 struct Game
 {
@@ -20,13 +22,10 @@ struct Game
   SDL_Event e;
   
   Buffer main_memory;
-  Buffer frame_memory;
+  FrameDataBuffer frame_memory;
 };
 
-void init_game(Game* game, const char* name
-                    , float width, float height
-                    , bool fullscreen
-                    , float pos_x = SDL_WINDOWPOS_UNDEFINED, float pos_y = SDL_WINDOWPOS_UNDEFINED);
+void init_game(Game* game, WindowParams* window_params);
 void on_game_start(Game* game);
 void on_game_finish(Game* game);
 void run_game(Game* game);
@@ -35,16 +34,18 @@ void destroy_game(Game* game);
 
 int main(int, char**)
 {
+  WindowParams window_params;
+  window_params.name = GAME_NAME;
+  window_params.fullscreen = FULLSCREEN;
+  window_params.rect.x = SDL_WINDOWPOS_CENTERED;
+  window_params.rect.y = SDL_WINDOWPOS_CENTERED;
+  window_params.rect.w = SCREEN_WIDTH;
+  window_params.rect.h = SCREEN_HEIGHT;
+
   GameError err = NO_ERROR;
 
   Game game;
-  init_game(&game, "Thernz Game"
-            , SCREEN_WIDTH
-            , SCREEN_HEIGHT
-            , false
-            , SDL_WINDOWPOS_CENTERED
-            , SDL_WINDOWPOS_CENTERED);
-  
+  init_game(&game, &window_params);  
   on_game_start(&game);
   run_game(&game);
   on_game_finish(&game);
@@ -53,21 +54,11 @@ int main(int, char**)
   return 0;
 }
 
-void init_game(Game* game, const char* name
-                    , float width, float height
-                    , bool fullscreen
-                    , float pos_x, float pos_y)
+void init_game(Game* game, WindowParams* window_params)
 {
-  game->name = name;
-  WindowParams window_params;
-  window_params.name = name;
-  window_params.fullscreen = fullscreen;
-  window_params.rect.x = pos_x;
-  window_params.rect.y = pos_y;
-  window_params.rect.w = width;
-  window_params.rect.h = height;
-  fatal_game_error(init_graphics(&game->graphics, &window_params));
-
+  game->name = window_params->name;
+  
+  fatal_game_error(init_graphics(&game->graphics, window_params));
   fatal_game_error(create_buffer(&game->main_memory, malloc(GIGABYTE(1)), GIGABYTE(1)));
 }
 

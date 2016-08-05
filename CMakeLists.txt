@@ -9,7 +9,6 @@ set(SOURCES main.cpp
             rendering.cpp
             render_functions.cpp
             graphics.cpp
-            memory.cpp
             error_codes.cpp)
 
 add_executable(thernz_game ${SOURCES})
