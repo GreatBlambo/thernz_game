@@ -20,6 +20,10 @@ add_custom_target(assets ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/
 
 add_dependencies(thernz_game assets)
 
+# Third party
+
+add_subdirectory(thirdparty)
+
 # Import libraries
 
 find_package(OpenGL REQUIRED)

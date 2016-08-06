@@ -6,9 +6,11 @@
 #include "sort.h"
 
 ////////////////////////////////////////////////////////////////////////////////
-// Double buffered command buffer
+// Command buffer
 ////////////////////////////////////////////////////////////////////////////////
-#define NUM_ARRAYS 2
+/**
+ * A buffer for adding commands in parallel and synchronously executing them.
+ */
 
 template <typename Key>
 using DispatchFunction = void (*) (Key key, void* params, void* data, size_t size);
@@ -36,13 +38,9 @@ struct GenericCommandBuffer
   FrameDataBuffer* frame_memory;
   SortItem<Key>* result_keys;
 
-  CommandArray<Key> command_arrays[NUM_ARRAYS];
-  std::atomic_size_t current_array;
+  CommandArray<Key> command_arrays;
   
   size_t max_commands;
-
-  std::atomic_size_t num_writing;
-  bool is_swapping;
 }; 
 
 template <typename Key>
@@ -51,7 +49,7 @@ GameError create_command_buffer(GenericCommandBuffer<Key>* result, size_t max_co
   // Check if frame_memory can support requested commands and if we can allocate enough memory for keys
   size_t amount_required = 0;
   amount_required += sizeof(SortItem<Key>); // Result keys
-  amount_required += (sizeof(SortItem<Key>) + sizeof(GenericCommand<Key>)) * NUM_ARRAYS; //CommandArrays
+  amount_required += (sizeof(SortItem<Key>) + sizeof(GenericCommand<Key>)); //CommandArrays
   amount_required *= max_commands; // times max commands
   
   if (frame_memory->size < max_commands
@@ -62,12 +60,10 @@ GameError create_command_buffer(GenericCommandBuffer<Key>* result, size_t max_co
   result->result_keys = push_array< SortItem<Key> >(perm_memory, max_commands);
 
   // Allocate the buffers
-  for (int i = 0; i < NUM_ARRAYS; i++)
-  {
-    result->command_arrays[i]->sort_keys = push_array< SortItem<Key> >(perm_memory, max_commands);
-    result->command_arrays[i]->commands = push_array< GenericCommand<Key> >(perm_memory, max_commands);
-    result->command_arrays[i]->num_commands = 0;
-  }
+  result->command_arrays->sort_keys = push_array< SortItem<Key> >(perm_memory, max_commands);
+  result->command_arrays->commands = push_array< GenericCommand<Key> >(perm_memory, max_commands);
+  result->command_arrays->num_commands = 0;
+  
   result->max_commands = max_commands;
   result->current_array = 0;
   result->num_writing = 0;
@@ -82,61 +78,65 @@ void* command_buffer_push_mem(GenericCommandBuffer<Key>* command_buffer, size_t 
   return push_size(command_buffer->frame_memory, size);
 }
 
+
+/**
+ * DO NOT SUBMIT COMMANDS WHILE PROCESSING
+ */
 template <typename Key>
 GameError command_buffer_submit_command(GenericCommandBuffer<Key>* command_buffer,
                                         DispatchFunction<Key> dispatch_function,
                                         Key key, void* params, void* data, size_t size)
 {  
   // Get current array
-  CommandArray<Key>* back_array = &command_buffer->command_arrays[(command_buffer->current_array + 1) % NUM_ARRAYS];
+  CommandArray<Key>& command_array = command_buffer->command_arrays;
 
   // Get offset
   // Gets CURRENT value of num_commands and atomically adds to it.
-  size_t current_index = back_array->num_commands.fetch_add();
+  size_t current_index = command_array.num_commands.fetch_add();
   // If that value was previously greater than the maximum allowed commands, reset to max and
   // return
   if (current_index >= command_buffer->max_commands)
   {
-    back_array->num_commands = command_buffer->max_commands;
+    command_array.num_commands = command_buffer->max_commands;
     return ERROR_ARRAY_SIZE;
   }
   
-  GenericCommand<Key>* command = back_array->commands + current_index;
+  GenericCommand<Key>* command = command_array.commands + current_index;
   command->dispatch_function = dispatch_function;
   command->params = params;
   command->data = data;
   command->size = size;
 
-  SortItem<Key>* sort_item = back_array->sort_keys + current_index;
+  SortItem<Key>* sort_item = command_array.sort_keys + current_index;
   sort_item->index = current_index;
   sort_item->sort_key = key;
   
   return NO_ERROR;
 }
 
+/**
+ * DO NOT SUBMIT COMMANDS WHILE PROCESSING
+ */
 template <typename Key>
 GameError command_buffer_process(GenericCommandBuffer<Key>* command_buffer)
 {  
   // Get current array
-  CommandArray<Key>* current_array = &command_buffer->command_arrays[command_buffer->current_array];
+  CommandArray<Key>& command_array = command_buffer->command_arrays;
 
-  size_t num_commands = current_array->num_commands;
+  size_t num_commands = command_array.num_commands;
+  if (num_commands > command_array.max_commands)
+    num_commands = command_array.max_commands;
 
-  radix_sort(current_array->sort_keys, current_array->result_keys, num_commands);
+  radix_sort(command_array.sort_keys, command_array.result_keys, num_commands);
 
   SortItem<Key> result_key;
   GenericCommand<Key>* command;
   for (size_t i = 0; i < num_commands; i++)
   {
-    result_key = current_array->result_keys[i];
-    command = current_array->commands + result_key.index;
+    result_key = command_array.result_keys[i];
+    command = command_array.commands + result_key.index;
     command->dispatch_function(result_key->key, command->params, command->data, command->size);
   }
   
   return NO_ERROR;
-}
-
-void command_buffer_swap(GenericCommandBuffer<Key>* command_buffer)
-{
-  command_buffer->current_array = (command_buffer->current_array + 1) % NUM_ARRAYS;
 }

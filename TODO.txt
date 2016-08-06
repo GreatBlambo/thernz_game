@@ -1,17 +1,6 @@
 * Tasks
 ** TODO Finish off sprite rendering and the renderer.
-  - Make API so that pushing a command accepts any buffer, not
-    just the frame data buffer in CommandBuffer
-  - Command buffer should contain two arrays of commands for
-    double buffering. Should increment a semaphore when
-    submitting a command, which the render function waits on.
-  - Read/Write locks for controlling swap while write? Or that
-    "reverse semaphore"
-  - Switch to POD atomic.
-  - Conditions:
-    - You cannot swap while a write is occurring
-    - You cannot write while a swap is occurring
-    - You MUST be able to write while another write is occurring
+   - Probably redo the command buffer.
 ** TODO GameApi struct that contains function pointers
    - FPs for when the game starts and finishes, and when it's updating.
 ** TODO Clean up the code a bit
