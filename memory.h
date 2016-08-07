@@ -49,7 +49,7 @@ GameError create_buffer(GenericBuffer<OffsetType>* buffer, void* data, size_t si
 }
 
 template <typename OffsetType>
-void* push_size(GenericBuffer<OffsetType>* buffer, size_t size, size_t align)
+void* push_size(GenericBuffer<OffsetType>* buffer, size_t size, size_t align = DEFAULT_ALIGN)
 {
   if (!buffer)
   {

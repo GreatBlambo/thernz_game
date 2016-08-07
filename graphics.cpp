@@ -215,12 +215,13 @@ GameError init_graphics(Graphics* graphics, WindowParams* window_params)
 
   // Init GLEW
   glewExperimental = GL_TRUE;
-  GLenum err = glewInit();
-  if (err != GLEW_OK)
+  GLenum glew_err = glewInit();
+  if (glew_err != GLEW_OK)
   {
-    printf("Failed to initialize GLEW: %s\n", glewGetErrorString(err));
+    printf("Failed to initialize GLEW: %s\n", glewGetErrorString(glew_err));
     return ERROR_GLEW;
   }
+  
   return NO_ERROR;
 }
 

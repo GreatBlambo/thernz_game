@@ -6,6 +6,7 @@
 #include "error_codes.h"
 #include "memory.h"
 #include "render_types.h"
+#include "command_buffer.h"
 
 struct WindowParams
 {

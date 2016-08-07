@@ -1,3 +1,6 @@
 [submodule "thirdparty/tbb"]
 	path = thirdparty/tbb
 	url = git@github.com:wjakob/tbb.git
+[submodule "thirdparty/presh-locks"]
+	path = thirdparty/presh-locks
+	url = git@github.com:preshing/cpp11-on-multicore.git

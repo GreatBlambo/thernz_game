@@ -1,142 +1,113 @@
+#pragma once
 #include <atomic>
 #include <thread>
 
 #include "memory.h"
+#include "rw_lock.h"
 #include "error_codes.h"
-#include "sort.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 // Command buffer
 ////////////////////////////////////////////////////////////////////////////////
-/**
- * A buffer for adding commands in parallel and synchronously executing them.
- */
 
-template <typename Key>
-using DispatchFunction = void (*) (Key key, void* params, void* data, size_t size);
+#define OTHER_BUFFER(index) !index
+#define NUM_BUFFERS 2
+typedef void (*DispatchFunction) (void* params, void* data, size_t size);
 
-template <typename Key>
-struct GenericCommand
+struct Command
 {
-  DispatchFunction<Key> dispatch_function;
+  DispatchFunction dispatch_function;
   void* params;
   void* data;
   size_t size;
 };
 
-template <typename Key>
-struct CommandArray
-{
-  SortItem<Key>* sort_keys;
-  GenericCommand<Key>* commands;
-  std::atomic_size_t num_commands;
-};
-
-template <typename Key>
-struct GenericCommandBuffer
+struct CommandBuffer
 {
   FrameDataBuffer* frame_memory;
-  SortItem<Key>* result_keys;
-
-  CommandArray<Key> command_arrays;
+  Command* commands[NUM_BUFFERS];
+  std::atomic_size_t num_commands[NUM_BUFFERS];
+  bool current_buffer;
   
   size_t max_commands;
-}; 
 
-template <typename Key>
-GameError create_command_buffer(GenericCommandBuffer<Key>* result, size_t max_commands, Buffer* perm_memory, FrameDataBuffer* frame_memory)
-{
-  // Check if frame_memory can support requested commands and if we can allocate enough memory for keys
-  size_t amount_required = 0;
-  amount_required += sizeof(SortItem<Key>); // Result keys
-  amount_required += (sizeof(SortItem<Key>) + sizeof(GenericCommand<Key>)); //CommandArrays
-  amount_required *= max_commands; // times max commands
-  
-  if (frame_memory->size < max_commands
-      || buffer_get_remaining(perm_memory) < amount_required)
-    return ERROR_BUFFER_SIZE;
-
-  result->frame_memory = frame_memory;
-  result->result_keys = push_array< SortItem<Key> >(perm_memory, max_commands);
-
-  // Allocate the buffers
-  result->command_arrays->sort_keys = push_array< SortItem<Key> >(perm_memory, max_commands);
-  result->command_arrays->commands = push_array< GenericCommand<Key> >(perm_memory, max_commands);
-  result->command_arrays->num_commands = 0;
-  
-  result->max_commands = max_commands;
-  result->current_array = 0;
-  result->num_writing = 0;
-  result->is_swapping = 0;
-
-  return NO_ERROR;
-}
-
-template <typename Key>
-void* command_buffer_push_mem(GenericCommandBuffer<Key>* command_buffer, size_t size)
-{
-  return push_size(command_buffer->frame_memory, size);
-}
-
+  RWLock rw_lock;
+};
 
 /**
- * DO NOT SUBMIT COMMANDS WHILE PROCESSING
+ * Submit command with existing data.
  */
-template <typename Key>
-GameError command_buffer_submit_command(GenericCommandBuffer<Key>* command_buffer,
-                                        DispatchFunction<Key> dispatch_function,
-                                        Key key, void* params, void* data, size_t size)
-{  
+
+template <typename Params>
+GameError command_buffer_submit(CommandBuffer* command_buffer,
+				DispatchFunction dispatch_function,
+				Params* params, void* data = NULL, size_t data_size = 0)
+{
+  RWLock_r_lock(&command_buffer->rw_lock);
+  
+  bool back_buffer = OTHER_BUFFER(command_buffer->current_buffer);
   // Get current array
-  CommandArray<Key>& command_array = command_buffer->command_arrays;
+  Command* command_array = command_buffer->commands[back_buffer];
 
   // Get offset
   // Gets CURRENT value of num_commands and atomically adds to it.
-  size_t current_index = command_array.num_commands.fetch_add();
+  size_t current_index = command_buffer->num_commands[back_buffer]++;
+  
   // If that value was previously greater than the maximum allowed commands, reset to max and
   // return
   if (current_index >= command_buffer->max_commands)
   {
-    command_array.num_commands = command_buffer->max_commands;
+    command_buffer->num_commands[back_buffer] = command_buffer->max_commands;
     return ERROR_ARRAY_SIZE;
   }
-  
-  GenericCommand<Key>* command = command_array.commands + current_index;
-  command->dispatch_function = dispatch_function;
-  command->params = params;
-  command->data = data;
-  command->size = size;
 
-  SortItem<Key>* sort_item = command_array.sort_keys + current_index;
-  sort_item->index = current_index;
-  sort_item->sort_key = key;
+  void* command_params = NULL;
+  if (params)
+  {
+    command_params = push_struct<Params>(command_buffer->frame_memory);
+    if (!command_params)
+    {
+      command_buffer->num_commands[back_buffer]--;
+      return ERROR_BUFFER_SIZE;
+    }
+    *((Params*) command_params) = *params;
+  }
+
+  Command* command = command_array + current_index;
+  printf("submit: %p, %i, back buff %i\n", command, current_index, back_buffer);
+  command->dispatch_function = dispatch_function;
+  printf("post submit: %p, %i, back buff %i\n", command, current_index, back_buffer);
+  command->params = (void*) command_params;
+  command->data = data;
+  command->size = data_size;
+  
+  RWLock_r_unlock(&command_buffer->rw_lock);
   
   return NO_ERROR;
 }
 
 /**
- * DO NOT SUBMIT COMMANDS WHILE PROCESSING
+ * Allocate and copy data to frame memory
  */
-template <typename Key>
-GameError command_buffer_process(GenericCommandBuffer<Key>* command_buffer)
-{  
-  // Get current array
-  CommandArray<Key>& command_array = command_buffer->command_arrays;
 
-  size_t num_commands = command_array.num_commands;
-  if (num_commands > command_array.max_commands)
-    num_commands = command_array.max_commands;
-
-  radix_sort(command_array.sort_keys, command_array.result_keys, num_commands);
-
-  SortItem<Key> result_key;
-  GenericCommand<Key>* command;
-  for (size_t i = 0; i < num_commands; i++)
+template <typename Params>
+GameError command_buffer_alloc_and_submit(CommandBuffer* command_buffer,
+					  DispatchFunction dispatch_function,
+					  Params* params, void* data, size_t data_size)
+{
+  void* new_data = NULL;
+  if (data)
   {
-    result_key = command_array.result_keys[i];
-    command = command_array.commands + result_key.index;
-    command->dispatch_function(result_key->key, command->params, command->data, command->size);
+    new_data = push_size(command_buffer->frame_memory, data_size);
+    if (!new_data)
+      return ERROR_BUFFER_SIZE;
+    memcpy(new_data, data, data_size);
   }
-  
+  command_buffer_submit(command_buffer, dispatch_function, params, new_data, data_size);
   return NO_ERROR;
 }
+
+GameError command_buffer_process(CommandBuffer* command_buffer);
+GameError create_command_buffer(CommandBuffer* result, size_t max_commands,
+				Buffer* perm_memory, FrameDataBuffer* frame_memory);
+void destroy_command_buffer(CommandBuffer* command_buffer);

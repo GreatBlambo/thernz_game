@@ -15,22 +15,28 @@ struct Game
 {
   //temp
   Sprite sprite;
+  CommandBuffer render_command_buffer;
+
+  volatile bool quit;
 
   //non-temp
   const char* name;
   Graphics graphics;
-  SDL_Event e;
   
   Buffer main_memory;
-  FrameDataBuffer frame_memory;
+  FrameDataBuffer render_frame_memory;
+  FrameDataBuffer sim_frame_memory;
 };
 
 void init_game(Game* game, WindowParams* window_params);
+void destroy_game(Game* game);
 void on_game_start(Game* game);
 void on_game_finish(Game* game);
 void run_game(Game* game);
-bool update_game(Game* game);
-void destroy_game(Game* game);
+int sim_loop(void* data);
+void sim_update(Game* game, float dt, SDL_Event e);
+void render_loop(Game* game);
+void render_update(Game* game);
 
 int main(int, char**)
 {
@@ -45,11 +51,8 @@ int main(int, char**)
   GameError err = NO_ERROR;
 
   Game game;
-  init_game(&game, &window_params);  
-  on_game_start(&game);
-  run_game(&game);
-  on_game_finish(&game);
-  
+  init_game(&game, &window_params);
+  run_game(&game);  
   destroy_game(&game);
   return 0;
 }
@@ -57,9 +60,21 @@ int main(int, char**)
 void init_game(Game* game, WindowParams* window_params)
 {
   game->name = window_params->name;
-  
   fatal_game_error(init_graphics(&game->graphics, window_params));
   fatal_game_error(create_buffer(&game->main_memory, malloc(GIGABYTE(1)), GIGABYTE(1)));
+  fatal_game_error(push_buffer(&game->main_memory, &game->render_frame_memory, MEGABYTE(50)));
+  fatal_game_error(push_buffer(&game->main_memory, &game->sim_frame_memory, MEGABYTE(50)));
+  fatal_game_error(create_command_buffer(&game->render_command_buffer, 1, &game->main_memory,
+					 &game->render_frame_memory));
+
+  game->quit = false;
+}
+
+void destroy_game(Game* game)
+{
+  destroy_command_buffer(&game->render_command_buffer);
+  fatal_game_error(destroy_graphics(&game->graphics));
+  free(game->main_memory.start);
 }
 
 void on_game_start(Game* game)
@@ -95,49 +110,77 @@ void on_game_finish(Game* game)
   destroy_program(game->sprite.shader_program);
 }
 
-bool update_game(Game* game)
+int sim_loop(void* data)
 {
-  static Color screen_clear_color = { 0.0, 0.2, 0.3, 1.0 };
-
-  while (SDL_PollEvent(&game->e) != 0)
+  Game* game = (Game*) data;
+  SDL_Event e;
+  float dt = SDL_GetTicks();
+  while (!game->quit)
   {
-    switch(game->e.type)
+    dt = SDL_GetTicks() - dt;
+    sim_update(game, dt, e);
+  }
+  return 0;
+}
+
+static Color screen_clear_color = { 0.0, 0.2, 0.3, 1.0 };
+void clear_color_dispatch(void* params, void* data, size_t size)
+{
+  clear_color((Color*) params);
+}
+
+void sim_update(Game* game, float dt, SDL_Event e)
+{
+  while (SDL_PollEvent(&e) != 0)
+  {
+    switch(e.type)
     {
     case(SDL_QUIT):
-      return true;
-    break;
+      game->quit = true;
+      break;
     case(SDL_KEYDOWN):
     {
-      if (game->e.key.keysym.sym == SDLK_ESCAPE)
-        return true;
+      switch(e.key.keysym.sym)
+      {
+      case(SDLK_ESCAPE):
+	printf("quitto\n");
+	game->quit = true;
+	break;
+      case(SDLK_f):
+	printf("squad\n");
+	break;
+      default:
+	break;
+      }
     }
     break;
     default:
       break;
     }
   }
-
-  
-  
-  clear_color(&screen_clear_color);
-  SDL_GL_SwapWindow(game->graphics.main_window);
-  
-  return false;
+  command_buffer_submit(&game->render_command_buffer, clear_color_dispatch, &screen_clear_color); 
 }
 
-void run_game(Game* game)
+void render_loop(Game* game)
 {
-  bool quit = false;
-  while(!quit)
+  while(!game->quit)
   {
-    buffer_reset(&game->frame_memory);
-    quit = update_game(game);
+    buffer_reset(&game->render_frame_memory);
+    render_update(game);
   }
 }
 
-
-void destroy_game(Game* game)
+void render_update(Game* game)
 {
-  fatal_game_error(destroy_graphics(&game->graphics));
-  free(game->main_memory.start);
+  command_buffer_process(&game->render_command_buffer);
+  SDL_GL_SwapWindow(game->graphics.main_window);
+}
+
+
+void run_game(Game* game)
+{
+  on_game_start(game);
+  SDL_DetachThread(SDL_CreateThread(sim_loop, "Sim loop", (void*) game)); 
+  render_loop(game);
+  on_game_finish(game);
 }
