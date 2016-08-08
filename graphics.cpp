@@ -10,19 +10,19 @@
 
 // Textures
 
-TextureID load_image_as_texture(const char* pathname)
+GameError load_image_as_texture(Texture* texture, const char* pathname)
 {
   //Load image at specified path
   SDL_Surface* loaded_surface = IMG_Load(pathname);
   if(loaded_surface == NULL)
   {
     printf("Unable to load image %s! SDL_image Error: %s\n", pathname, IMG_GetError());
-    return 0;
+    return ERROR_SDL;
   }
   //Create texture from surface pixels
-  GLuint texture;
-  glGenTextures(1, &texture);
-  glBindTexture(GL_TEXTURE_2D, texture);
+  GLuint texture_id;
+  glGenTextures(1, &texture_id);
+  glBindTexture(GL_TEXTURE_2D, texture_id);
   
   int tex_mode = GL_RGB;
   
@@ -32,22 +32,32 @@ TextureID load_image_as_texture(const char* pathname)
   
   glTexImage2D(GL_TEXTURE_2D, 0, tex_mode, loaded_surface->w, loaded_surface->h, 0, tex_mode, GL_UNSIGNED_BYTE, loaded_surface->pixels);
   
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
+  texture->texture_id = texture_id;
+  texture->w = loaded_surface->w;
+  texture->h = loaded_surface->h;
+  
   //Clean up surface
   SDL_FreeSurface(loaded_surface);
   
-  return texture;
+  return NO_ERROR;
 }
 
-void destroy_texture(TextureID texture)
+bool texture_is_valid(Texture* texture)
 {
-  glDeleteTextures(1, &texture);
+  return texture->texture_id > 0;
+}
+
+void destroy_texture(Texture* texture)
+{
+  glDeleteTextures(1, &texture->texture_id);
 }
 
 // Shaders
-  
+#define ERROR_BUFF_SIZE 512
+
 ShaderID load_shader_source(const char* pathname, GLenum shader_type)
 {
   ShaderID result;
@@ -82,7 +92,15 @@ ShaderID load_shader_source(const char* pathname, GLenum shader_type)
 
   if (!is_compiled)
   {
-    printf("Compile issue\n");
+    printf("Compile issue:");
+    char error_buff[ERROR_BUFF_SIZE];
+    int max_length = 0;
+    glGetShaderiv(result, GL_INFO_LOG_LENGTH, &max_length);
+    glGetShaderInfoLog(result, max_length, &max_length, error_buff);
+
+    error_buff[max_length] = 0;
+    printf("%s\n", error_buff);
+    
     glDeleteShader(result);
     result = 0;
   }
@@ -115,6 +133,15 @@ ShaderProgramID link_shader_program(ShaderID* shaders, size_t num_shaders)
   if (!is_linked)
   {
     printf("Linking error\n");
+
+    char error_buff[ERROR_BUFF_SIZE];
+    int max_length = 0;
+    glGetProgramiv(program, GL_INFO_LOG_LENGTH, &max_length);
+    glGetProgramInfoLog(program, max_length, &max_length, error_buff);
+
+    error_buff[max_length] = 0;
+    printf("%s\n", error_buff);
+    
     glDeleteProgram(program);
     return 0;
   }
@@ -221,6 +248,11 @@ GameError init_graphics(Graphics* graphics, WindowParams* window_params)
     printf("Failed to initialize GLEW: %s\n", glewGetErrorString(glew_err));
     return ERROR_GLEW;
   }
+
+  glViewport(0, 0, window_params->rect.w, window_params->rect.h);
+  glEnable(GL_BLEND);
+  glEnable(GL_DEPTH_TEST);
+  glDepthFunc(GL_LESS);
   
   return NO_ERROR;
 }

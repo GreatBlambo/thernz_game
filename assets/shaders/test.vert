@@ -1,12 +1,13 @@
-#version 150 core
-  
-in vec3 position;
-in vec3 normal;
+#version 330 core
 
-out vec4 vertColor;
-  
+in vec2 vertex;
+out vec2 frag_texcoords;
+
+uniform mat4 model;
+uniform mat4 projection;
+
 void main()
 {
-  gl_Position = vec4(position, 1.0);
-  vertColor = vec4(normal, 1.0);
+  frag_texcoords = vertex;
+  gl_Position = projection * model * vec4(vertex, 0.0f, 1.0f);
 }

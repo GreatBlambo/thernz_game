@@ -6,6 +6,6 @@ void clear_color(Color* color)
 {
   if (!color)
     return;
-  glClearColor(color->r, color->g, color->b, color->a);
-  glClear(GL_COLOR_BUFFER_BIT);
+  glClearColor(color->x, color->y, color->z, 1.0);
+  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 }

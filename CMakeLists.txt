@@ -15,10 +15,9 @@ endif()
 set(SOURCES main.cpp
             rendering.cpp
             render_functions.cpp
+	    render_types.cpp
             graphics.cpp
-            error_codes.cpp
-	    command_buffer.cpp
-	    rw_lock.cpp)
+            error_codes.cpp)
 
 add_executable(thernz_game ${SOURCES})
 target_compile_features(thernz_game PRIVATE cxx_range_for)
@@ -33,6 +32,7 @@ add_dependencies(thernz_game assets)
 # Third party
 
 add_subdirectory(thirdparty)
+include_directories(thirdparty/presh_locks/common)
 
 # Import libraries
 

@@ -1,6 +1,7 @@
 * Tasks
 ** TODO Finish off sprite rendering and the renderer.
-   - Probably redo the command buffer.
+   - Benchmark current system (finish up the texture atlas UV passing) and compare it to other
+     methods such as streaming to vbos.
 ** TODO GameApi struct that contains function pointers
    - FPs for when the game starts and finishes, and when it's updating.
 ** TODO Clean up the code a bit

@@ -3,7 +3,7 @@
 #include <stdarg.h>
 #include <stdlib.h>
 
-void check_trace_game_error(GameError err, bool fatal)
+void check_trace_game_error(GameError err)
 {
   if (err)
     error(error_strings[err]);

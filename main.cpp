@@ -14,18 +14,18 @@
 struct Game
 {
   //temp
+  Texture bird_texture;
   Sprite sprite;
-  CommandBuffer render_command_buffer;
-
-  volatile bool quit;
+  ShaderProgramID shader_program;
+  SpriteBatch sprite_batch;
 
   //non-temp
   const char* name;
   Graphics graphics;
+  volatile bool quit;
   
   Buffer main_memory;
-  FrameDataBuffer render_frame_memory;
-  FrameDataBuffer sim_frame_memory;
+  FrameDataBuffer frame_memory;
 };
 
 void init_game(Game* game, WindowParams* window_params);
@@ -62,17 +62,13 @@ void init_game(Game* game, WindowParams* window_params)
   game->name = window_params->name;
   fatal_game_error(init_graphics(&game->graphics, window_params));
   fatal_game_error(create_buffer(&game->main_memory, malloc(GIGABYTE(1)), GIGABYTE(1)));
-  fatal_game_error(push_buffer(&game->main_memory, &game->render_frame_memory, MEGABYTE(50)));
-  fatal_game_error(push_buffer(&game->main_memory, &game->sim_frame_memory, MEGABYTE(50)));
-  fatal_game_error(create_command_buffer(&game->render_command_buffer, 1, &game->main_memory,
-					 &game->render_frame_memory));
+  fatal_game_error(push_buffer(&game->main_memory, &game->frame_memory, MEGABYTE(50)));
 
   game->quit = false;
 }
 
 void destroy_game(Game* game)
 {
-  destroy_command_buffer(&game->render_command_buffer);
   fatal_game_error(destroy_graphics(&game->graphics));
   free(game->main_memory.start);
 }
@@ -80,13 +76,9 @@ void destroy_game(Game* game)
 void on_game_start(Game* game)
 {
   // Load assets
-  game->sprite.texture = load_image_as_texture("assets/bird.png");
-  if(!game->sprite.texture)
+  check_trace_game_error(load_image_as_texture(&game->bird_texture, "assets/bird.png"));
+  if(!texture_is_valid(&game->bird_texture))
     fatal_game_error(ERROR_SDL);
-  game->sprite.rect.x = 0;
-  game->sprite.rect.y = 0;
-  game->sprite.rect.w = 100;
-  game->sprite.rect.h = 100;
 
   ShaderID shaders[2];
   shaders[0] = load_shader_source("assets/shaders/test.vert", GL_VERTEX_SHADER);
@@ -94,41 +86,42 @@ void on_game_start(Game* game)
   if (!shaders[0] || !shaders[1])
     fatal_game_error(ERROR_OPENGL);
   
-  game->sprite.shader_program = link_shader_program(shaders, 2);
-  if (!game->sprite.shader_program)
+  game->shader_program = link_shader_program(shaders, 2);
+  if (!game->shader_program)
     fatal_game_error(ERROR_OPENGL);
 
+  // Create sprites
+  create_sprite(&game->sprite, { 0, 0 }, { 100, 100 }, &game->bird_texture);
+  if (!sprite_is_valid(&game->sprite))
+    fatal_game_error(ERROR_OPENGL);
+  transform_sprite(&game->sprite, {500, 500, 0}, {100, 100}, 0, {0, 0, 1});
+  
+  // Create sprite batch
+  create_sprite_batch(&game->sprite_batch, SCREEN_WIDTH, SCREEN_HEIGHT, game->shader_program);
+
   //cleanup  
-  detach_shaders(game->sprite.shader_program, shaders, 2); 
+  detach_shaders(game->shader_program, shaders, 2); 
   destroy_shader(shaders[0]);
   destroy_shader(shaders[1]);
 }
 
 void on_game_finish(Game* game)
 {
-  destroy_texture(game->sprite.texture);
-  destroy_program(game->sprite.shader_program);
+  destroy_texture(&game->bird_texture);
+  destroy_program(game->shader_program);
+  destroy_sprite_batch(&game->sprite_batch);
 }
 
-int sim_loop(void* data)
-{
-  Game* game = (Game*) data;
-  SDL_Event e;
-  float dt = SDL_GetTicks();
-  while (!game->quit)
-  {
-    dt = SDL_GetTicks() - dt;
-    sim_update(game, dt, e);
-  }
-  return 0;
-}
-
-static Color screen_clear_color = { 0.0, 0.2, 0.3, 1.0 };
+static Color screen_clear_color = { 0.0, 0.2, 0.3 };
 void clear_color_dispatch(void* params, void* data, size_t size)
 {
   clear_color((Color*) params);
 }
 
+float angle = 0;
+float bogo = 0;
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/matrix_transform.hpp>
 void sim_update(Game* game, float dt, SDL_Event e)
 {
   while (SDL_PollEvent(&e) != 0)
@@ -143,7 +136,7 @@ void sim_update(Game* game, float dt, SDL_Event e)
       switch(e.key.keysym.sym)
       {
       case(SDLK_ESCAPE):
-	printf("quitto\n");
+	printf("quit\n");
 	game->quit = true;
 	break;
       case(SDLK_f):
@@ -158,29 +151,35 @@ void sim_update(Game* game, float dt, SDL_Event e)
       break;
     }
   }
-  command_buffer_submit(&game->render_command_buffer, clear_color_dispatch, &screen_clear_color); 
-}
-
-void render_loop(Game* game)
-{
-  while(!game->quit)
-  {
-    buffer_reset(&game->render_frame_memory);
-    render_update(game);
-  }
+  angle += 0.04;
+  bogo += 0.5;
+  
+  transform_sprite(&game->sprite, {400 + (100 * glm::sin(angle)), 400 + (100 * glm::sin(angle)), 0}, {200 + (5 * glm::sin(dt)), 200 + (-5 * glm::sin(dt))} , DEGREES_TO_RADS(20 * glm::sin(bogo)), {0, 0, 1});
 }
 
 void render_update(Game* game)
 {
-  command_buffer_process(&game->render_command_buffer);
+  clear_color(&screen_clear_color);
+  render_sprites(&game->sprite_batch, &game->sprite, 1);
   SDL_GL_SwapWindow(game->graphics.main_window);
 }
 
+void game_loop(Game* game)
+{
+  SDL_Event e;
+  float dt = SDL_GetTicks();
+  while (!game->quit)
+  {
+    buffer_reset(&game->frame_memory);
+    dt = SDL_GetTicks() - dt;
+    sim_update(game, dt, e);
+    render_update(game);
+  }
+}
 
 void run_game(Game* game)
 {
   on_game_start(game);
-  SDL_DetachThread(SDL_CreateThread(sim_loop, "Sim loop", (void*) game)); 
-  render_loop(game);
+  game_loop(game);
   on_game_finish(game);
 }

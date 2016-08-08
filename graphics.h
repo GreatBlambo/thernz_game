@@ -6,7 +6,6 @@
 #include "error_codes.h"
 #include "memory.h"
 #include "render_types.h"
-#include "command_buffer.h"
 
 struct WindowParams
 {
@@ -26,8 +25,9 @@ struct Graphics
 ////////////////////////////////////////////////////////////////////////////////
 
 // Textures
-TextureID load_image_as_texture(const char* pathname);
-void destroy_texture(TextureID texture);
+GameError load_image_as_texture(Texture* texture, const char* pathname);
+bool texture_is_valid(Texture* texture);
+void destroy_texture(Texture* texture);
 
 // Shaders
 ShaderID load_shader_source(const char* pathname, GLenum shader_type);

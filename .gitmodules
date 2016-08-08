@@ -4,3 +4,6 @@
 [submodule "thirdparty/presh-locks"]
 	path = thirdparty/presh-locks
 	url = git@github.com:preshing/cpp11-on-multicore.git
+[submodule "thirdparty/cpp11-on-multicore"]
+	path = thirdparty/cpp11-on-multicore
+	url = git@github.com:preshing/cpp11-on-multicore.git
