@@ -92,12 +92,10 @@ void on_game_start(Game* game)
 
   // Create sprites
   create_sprite(&game->sprite, { 0, 0 }, { 100, 100 }, &game->bird_texture);
-  if (!sprite_is_valid(&game->sprite))
-    fatal_game_error(ERROR_OPENGL);
   transform_sprite(&game->sprite, {500, 500, 0}, {100, 100}, 0, {0, 0, 1});
   
   // Create sprite batch
-  create_sprite_batch(&game->sprite_batch, SCREEN_WIDTH, SCREEN_HEIGHT, game->shader_program);
+  create_sprite_batch(&game->sprite_batch, SCREEN_WIDTH, SCREEN_HEIGHT, game->bird_texture, game->shader_program);
 
   //cleanup  
   detach_shaders(game->shader_program, shaders, 2); 
@@ -118,10 +116,6 @@ void clear_color_dispatch(void* params, void* data, size_t size)
   clear_color((Color*) params);
 }
 
-float angle = 0;
-float bogo = 0;
-#include <glm/gtc/matrix_transform.hpp>
-#include <glm/gtc/matrix_transform.hpp>
 void sim_update(Game* game, float dt, SDL_Event e)
 {
   while (SDL_PollEvent(&e) != 0)
@@ -151,10 +145,6 @@ void sim_update(Game* game, float dt, SDL_Event e)
       break;
     }
   }
-  angle += 0.04;
-  bogo += 0.5;
-  
-  transform_sprite(&game->sprite, {400 + (100 * glm::sin(angle)), 400 + (100 * glm::sin(angle)), 0}, {200 + (5 * glm::sin(dt)), 200 + (-5 * glm::sin(dt))} , DEGREES_TO_RADS(20 * glm::sin(bogo)), {0, 0, 1});
 }
 
 void render_update(Game* game)

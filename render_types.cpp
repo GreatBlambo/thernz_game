@@ -3,16 +3,10 @@
 
 void create_sprite(Sprite* sprite, glm::vec2 texture_offset, glm::vec2 sprite_dims, Texture* texture)
 {
-  sprite->texture = texture->texture_id;
   sprite->sprite_uv.x = texture_offset.x / texture->w;
   sprite->sprite_uv.y = texture_offset.y / texture->h;
   sprite->sprite_uv.w = sprite_dims.x / texture->w;
   sprite->sprite_uv.z = sprite_dims.y / texture->h;
-}
-
-bool sprite_is_valid(Sprite* sprite)
-{
-  return sprite->texture > 0;
 }
 
 void sprite_apply_transform(Sprite* sprite, glm::mat4 transform_matrix)

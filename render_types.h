@@ -24,10 +24,9 @@ struct Texture
 
 struct Sprite
 {
-  TextureID texture;
+  glm::vec4 color = { 1.0f, 1.0f, 1.0f, 1.0f };
   glm::vec4 sprite_uv;
   glm::mat4 model;
-  glm::vec4 color = { 1.0f, 1.0f, 1.0f, 1.0f };
 };
 
 void create_sprite(Sprite* sprite, glm::vec2 texture_offset, glm::vec2 sprite_dims, Texture* texture);

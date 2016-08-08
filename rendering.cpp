@@ -15,12 +15,21 @@ static const uint16_t quad_indices[] = {
   1, 2, 3
 };
 
-void create_sprite_batch(SpriteBatch* sprite_batch, float screen_w, float screen_h, ShaderProgramID shader_program)
-{  
+void create_sprite_batch(SpriteBatch* sprite_batch,
+                         float screen_w, float screen_h,
+                         Texture sprite_atlas, ShaderProgramID shader_program)
+{ 
+  // Get uniform locations
   sprite_batch->shader_program = shader_program;
-  sprite_batch->model_loc = glGetUniformLocation(shader_program, "model");
   sprite_batch->projection_loc = glGetUniformLocation(shader_program, "projection");
-  sprite_batch->sprite_color_loc = glGetUniformLocation(shader_program, "sprite_color");
+  sprite_batch->view_loc = glGetUniformLocation(shader_program, "view");
+
+  // Set parameters
+  sprite_batch->screen_w = screen_w;
+  sprite_batch->screen_h = screen_h;
+  sprite_batch->sprite_atlas = sprite_atlas;
+  
+  // Initialize buffers
 
   glGenVertexArrays(1, &sprite_batch->quad_vao);
   glGenBuffers(1, &sprite_batch->quad_vbo);
@@ -33,13 +42,34 @@ void create_sprite_batch(SpriteBatch* sprite_batch, float screen_w, float screen
   
   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, sprite_batch->quad_ibo);
   glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(quad_indices), quad_indices, GL_STATIC_DRAW);
-  
-  int vert_loc = glGetAttribLocation(shader_program, "vertex");
-  glEnableVertexAttribArray(vert_loc);
-  glVertexAttribPointer(vert_loc, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(GLfloat), NULL);
 
-  sprite_batch->screen_w = screen_w;
-  sprite_batch->screen_h = screen_h;
+  // Set vertex attributes
+  // Quad data
+  int pos_loc = glGetAttribLocation(shader_program, "position");
+  glEnableVertexAttribArray(pos_loc);
+  glVertexAttribPointer(pos_loc, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(GLfloat), NULL);
+  
+  // Per instance data
+  glBindBuffer(GL_ARRAY_BUFFER, sprite_batch->sprite_vbo);
+  
+  int color_loc = glGetAttribLocation(shader_program, "color");
+  glEnableVertexAttribArray(color_loc);
+  glVertexAttribPointer(color_loc, 4, GL_FLOAT, GL_FALSE, sizeof(Sprite), (void*) offsetof(Sprite, color));
+  glVertexAttribDivisor(color_loc, 1);
+  
+  int sprite_uv_loc = glGetAttribLocation(shader_program, "sprite_uv");
+  glEnableVertexAttribArray(sprite_uv_loc);
+  glVertexAttribPointer(sprite_uv_loc, 4, GL_FLOAT, GL_FALSE, sizeof(Sprite), (void*) offsetof(Sprite, sprite_uv));
+  glVertexAttribDivisor(sprite_uv_loc, 1);
+
+  int model_loc = glGetAttribLocation(shader_program, "model");
+  for (int i = 0; i < 4; i++)
+  {
+    int loc = model_loc + i;
+    glEnableVertexAttribArray(loc);
+    glVertexAttribPointer(loc, 4, GL_FLOAT, GL_FALSE, sizeof(Sprite), (void*) (offsetof(Sprite, model) + (i * sizeof(glm::vec4))));
+    glVertexAttribDivisor(loc, 1);
+  }
 
   glBindBuffer(GL_ARRAY_BUFFER, 0);
   glBindVertexArray(0);
@@ -54,28 +84,23 @@ void destroy_sprite_batch(SpriteBatch* sprite_batch)
 
 void render_sprites(SpriteBatch* sprite_batch, Sprite* sprites, size_t num_sprites)
 {
-  glm::mat4 projection = glm::ortho(0.0f, sprite_batch->screen_w, sprite_batch->screen_h, 0.0f, -1.0f, 1.0f);
+  static glm::mat4 projection = glm::ortho(0.0f, sprite_batch->screen_w, sprite_batch->screen_h, 0.0f, -1.0f, 1.0f);
+  static glm::mat4 view(1.0f);
+
+  //upload sprites to opengl
+  glBindBuffer(GL_ARRAY_BUFFER, sprite_batch->sprite_vbo);
+  glBufferData(GL_ARRAY_BUFFER, sizeof(Sprite) * num_sprites, sprites, GL_DYNAMIC_DRAW);
   
-  glUseProgram(sprite_batch->shader_program);
   glBindVertexArray(sprite_batch->quad_vao);
-  glActiveTexture(GL_TEXTURE0);
+  glUseProgram(sprite_batch->shader_program);
+  glUniformMatrix4fv(sprite_batch->projection_loc, 1, false, glm::value_ptr(projection));
+  glUniformMatrix4fv(sprite_batch->view_loc, 1, false, glm::value_ptr(projection));
   
-  TextureID current_texture = 0;
-  for (size_t i = 0; i < num_sprites; i++)
-  {
-    if (current_texture != sprites[i].texture
-	|| i == 0)
-    {
-      current_texture = sprites[i].texture;
-      glBindTexture(GL_TEXTURE_2D, current_texture);
-    }
-    
-    glUniformMatrix4fv(sprite_batch->model_loc, 1, false, glm::value_ptr(sprites[i].model));
-    glUniformMatrix4fv(sprite_batch->projection_loc, 1, false, glm::value_ptr(projection));    
-    glUniform3fv(sprite_batch->sprite_color_loc, 1, glm::value_ptr(sprites[i].color));
-    
-    glDrawElements(GL_TRIANGLES, ARRAY_SIZE(quad_indices), GL_UNSIGNED_SHORT, 0);
-  }
+  glActiveTexture(GL_TEXTURE0);
+  glBindTexture(GL_TEXTURE_2D, sprite_batch->sprite_atlas.texture_id);
+
+  //draw instanced
+  glDrawElementsInstanced(GL_TRIANGLES, ARRAY_SIZE(quad_indices), GL_UNSIGNED_SHORT, quad_indices, num_sprites);
   
   glBindVertexArray(0);
 }

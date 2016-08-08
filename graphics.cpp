@@ -238,7 +238,7 @@ GameError init_graphics(Graphics* graphics, WindowParams* window_params)
   {
     printf("Failed to create OpenGL context\n");
     return ERROR_OPENGL;
-  }  
+  }
 
   // Init GLEW
   glewExperimental = GL_TRUE;
@@ -253,7 +253,7 @@ GameError init_graphics(Graphics* graphics, WindowParams* window_params)
   glEnable(GL_BLEND);
   glEnable(GL_DEPTH_TEST);
   glDepthFunc(GL_LESS);
-  
+
   return NO_ERROR;
 }
 
