@@ -21,6 +21,7 @@ set(SOURCES main.cpp
 
 add_executable(thernz_game ${SOURCES})
 target_compile_features(thernz_game PRIVATE cxx_range_for)
+add_definitions(-DGLEW_STATIC)
 
 # Copy assets folder
 file(GLOB_RECURSE ASSETS ${CMAKE_CURRENT_SOURCE_DIR}/assets/*)
@@ -46,27 +47,27 @@ add_library(glew STATIC IMPORTED)
 set_property(TARGET glew PROPERTY INTERFACE_INCLUDE_DIRECTORIES ${GLEW_INCLUDE_DIRS})
 set_property(TARGET glew PROPERTY IMPORTED_LOCATION ${GLEW_LIBRARY})
 
-find_package(SDL2 REQUIRED STATIC)
+find_package(SDL2 REQUIRED)
 add_library(sdl2 INTERFACE IMPORTED)
-set_property(TARGET sdl2 PROPERTY INTERFACE_INCLUDE_DIRECTORIES ${SDL2_INCLUDE_DIRS})
+set_property(TARGET sdl2 PROPERTY INTERFACE_INCLUDE_DIRECTORIES ${SDL2_INCLUDE_DIR})
 set_property(TARGET sdl2 PROPERTY INTERFACE_LINK_LIBRARIES ${SDL2_LIBRARY})
 
 add_library(sdl2_main INTERFACE IMPORTED)
 set_property(TARGET sdl2_main PROPERTY INTERFACE_LINK_LIBRARIES ${SDL2_LIBRARY})
 
-find_package(SDL2_image REQUIRED STATIC)
+find_package(SDL2_image REQUIRED)
 add_library(sdl2_image INTERFACE IMPORTED)
 set_property(TARGET sdl2 PROPERTY INTERFACE_LINK_LIBRARIES ${SDL2IMAGE_LIBRARY})
 set_property(TARGET sdl2_image PROPERTY INTERFACE_LINK_LIBRARIES ${SDL2IMAGE_LIBRARY})
 
 find_package(glm REQUIRED STATIC)
+include_directories(${GLM_INCLUDE_DIR})
 
 # Link target libraries
 
 target_link_libraries(thernz_game
   opengl
   glew
-  glm
   sdl2
   sdl2_image
   sdl2_main)
