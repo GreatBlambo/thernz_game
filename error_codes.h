@@ -28,9 +28,6 @@ static const char* error_strings[] =
   , "Array size"
 };
 
-#define CHECK_ERR_TRACE_RETURN(err, call) if (err = call) { printf("Error! Code: %i, when calling " #call "\n", err); return err; }
-#define CHECK_ERR_RETURN(err, call) if (err = call) { return err; }
-
 void check_trace_game_error(GameError err);
 void fatal_game_error(GameError err);
 void error(const char* fmt, ...);

@@ -11,13 +11,25 @@
 #define GAME_NAME "Thernz Game"
 #define FULLSCREEN false
 
+#define MAIN_MEMORY_SIZE GIGABYTE(1)
+#define FRAME_MEMORY_SIZE GIGABYTE(1)
+
+#define MAX_SPRITES 1024
+
 struct Game
 {
-  //temp
-  Texture bird_texture;
-  Sprite sprite;
-  ShaderProgramID shader_program;
+  //components
+  Sprite* sprites;
+  glm::mat4* sprite_transforms;
+  size_t num_sprites;
+  size_t max_sprites;
+
+  // systems
   SpriteBatch sprite_batch;
+
+  // assets
+  Texture bird_texture;
+  ShaderProgramID shader_program;
 
   //non-temp
   const char* name;
@@ -61,8 +73,8 @@ void init_game(Game* game, WindowParams* window_params)
 {
   game->name = window_params->name;
   fatal_game_error(init_graphics(&game->graphics, window_params));
-  fatal_game_error(create_buffer(&game->main_memory, malloc(GIGABYTE(1)), GIGABYTE(1)));
-  fatal_game_error(push_buffer(&game->main_memory, &game->frame_memory, MEGABYTE(50)));
+  fatal_game_error(create_buffer(&game->main_memory, malloc(MAIN_MEMORY_SIZE), MAIN_MEMORY_SIZE));
+  fatal_game_error(push_buffer(&game->main_memory, &game->frame_memory, FRAME_MEMORY_SIZE));
 
   game->quit = false;
 }
@@ -76,9 +88,7 @@ void destroy_game(Game* game)
 void on_game_start(Game* game)
 {
   // Load assets
-  check_trace_game_error(load_image_as_texture(&game->bird_texture, "assets/bird.png"));
-  if(!texture_is_valid(&game->bird_texture))
-    fatal_game_error(ERROR_SDL);
+  fatal_game_error(load_image_as_texture(&game->bird_texture, "assets/bird.png"));
 
   ShaderID shaders[2];
   shaders[0] = load_shader_source("assets/shaders/test.vert", GL_VERTEX_SHADER);
@@ -89,18 +99,32 @@ void on_game_start(Game* game)
   game->shader_program = link_shader_program(shaders, 2);
   if (!game->shader_program)
     fatal_game_error(ERROR_OPENGL);
-
-  // Create sprites
-  create_sprite(&game->sprite, { 100, 100 }, { 500, 500 }, &game->bird_texture);
-  transform_sprite(&game->sprite, {500, 500, 0}, {100, 100}, 0, {0, 0, 1});
   
   // Create sprite batch
-  create_sprite_batch(&game->sprite_batch, SCREEN_WIDTH, SCREEN_HEIGHT, game->bird_texture, game->shader_program);
+  create_sprite_batch(&game->sprite_batch,
+                      SCREEN_WIDTH, SCREEN_HEIGHT,
+                      game->bird_texture, game->shader_program
+                      MAX_SPRITES);
 
   //cleanup  
   detach_shaders(game->shader_program, shaders, 2); 
   destroy_shader(shaders[0]);
   destroy_shader(shaders[1]);
+
+  // Components
+  game->sprites = push_array<Sprite>(game->main_memory, MAX_SPRITES);
+  game->sprite_transforms = push_array<glm::mat4>(game->main_memory, MAX_SPRITES);
+  if (!game->sprites
+      || !game->sprite_transforms)
+  {
+    fatal_error("Not enough memory for data components");
+  }
+
+  // Create sprites
+  for (size_t i = 0; i < MAX_SPRITES; i++)
+  {
+    // create_sprite and shit
+  };
 }
 
 void on_game_finish(Game* game)
@@ -145,7 +169,7 @@ void render_update(Game* game)
 {
   static Color screen_clear_color = { 0.0, 0.2, 0.3 };
   clear_color(&screen_clear_color);
-  render_sprites(&game->sprite_batch, &game->sprite, 1);
+  render_sprites(&game->sprite_batch, &game->sprites, &game->sprite_transforms, 1);
   SDL_GL_SwapWindow(game->graphics.main_window);
 }
 

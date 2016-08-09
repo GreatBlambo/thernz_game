@@ -1,9 +1,6 @@
 * Tasks
 ** TODO Finish off sprite rendering and the renderer.
-   - Benchmark current system (finish up the texture atlas UV passing) and compare it to other
-     methods such as streaming to vbos.
-   - Look into uploading sprite UVs as instance array at once then uploading indices as 
-     instance dataevery frame.
+   - Look into sprite batch caching sprite info by keeping track of some "resource ID"
 ** TODO Materials and resources system that passes out indicies
 ** TODO GameApi struct that contains function pointers
    - FPs for when the game starts and finishes, and when it's updating.

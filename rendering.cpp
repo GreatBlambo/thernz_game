@@ -17,7 +17,8 @@ static const uint16_t quad_indices[] = {
 
 void create_sprite_batch(SpriteBatch* sprite_batch,
                          float screen_w, float screen_h,
-                         Texture sprite_atlas, ShaderProgramID shader_program)
+                         Texture sprite_atlas, ShaderProgramID shader_program,
+                         size_t max_sprites)
 { 
   // Get uniform locations
   sprite_batch->shader_program = shader_program;
@@ -35,6 +36,7 @@ void create_sprite_batch(SpriteBatch* sprite_batch,
   glGenBuffers(1, &sprite_batch->quad_vbo);
   glGenBuffers(1, &sprite_batch->quad_ibo);
   glGenBuffers(1, &sprite_batch->sprite_vbo);
+  glGenBuffers(1, &sprite_batch->model_vbo);
   
   glBindVertexArray(sprite_batch->quad_vao);
   
@@ -52,6 +54,7 @@ void create_sprite_batch(SpriteBatch* sprite_batch,
 
   // Per instance data
   glBindBuffer(GL_ARRAY_BUFFER, sprite_batch->sprite_vbo);
+  glBufferData(GL_ARRAY_BUFFER, sizeof(Sprite) * max_sprites, NULL, GL_DYNAMIC_DRAW);
   
   int color_loc = glGetAttribLocation(shader_program, "color");
   glEnableVertexAttribArray(color_loc);
@@ -62,13 +65,17 @@ void create_sprite_batch(SpriteBatch* sprite_batch,
   glEnableVertexAttribArray(sprite_uv_loc);
   glVertexAttribPointer(sprite_uv_loc, 4, GL_FLOAT, GL_FALSE, sizeof(Sprite), (void*) offsetof(Sprite, sprite_uv));
   glVertexAttribDivisor(sprite_uv_loc, 1);
+
+  // Model vbo
+  glBindBuffer(GL_ARRAY_BUFFER, sprite_batch->model_vbo);
+  glBufferData(GL_ARRAY_BUFFER, sizeof(glm::mat4) * max_sprites, NULL, GL_DYNAMIC_DRAW);
   
   int model_loc = glGetAttribLocation(shader_program, "model");
   for (int i = 0; i < 4; i++)
   {
     int loc = model_loc + i;
     glEnableVertexAttribArray(loc);
-    glVertexAttribPointer(loc, 4, GL_FLOAT, GL_FALSE, sizeof(Sprite), (void*) (offsetof(Sprite, model) + (i * sizeof(glm::vec4))));
+    glVertexAttribPointer(loc, 4, GL_FLOAT, GL_FALSE, sizeof(glm::mat4), (void*) (i * sizeof(glm::vec4)));
     glVertexAttribDivisor(loc, 1);
   }
   
@@ -81,16 +88,22 @@ void destroy_sprite_batch(SpriteBatch* sprite_batch)
   glDeleteVertexArrays(1, &sprite_batch->quad_vao);
   glDeleteBuffers(1, &sprite_batch->quad_vbo);
   glDeleteBuffers(1, &sprite_batch->quad_ibo);
+  glDeleteBuffers(1, &sprite_batch->sprite_vbo);
+  glDeleteBuffers(1, &sprite_batch->model_vbo);
 }
 
-void render_sprites(SpriteBatch* sprite_batch, Sprite* sprites, size_t num_sprites)
+void render_sprites(SpriteBatch* sprite_batch, Sprite* sprites, glm::mat4* models, size_t num_sprites)
 {
   static glm::mat4 projection = glm::ortho(0.0f, sprite_batch->screen_w, sprite_batch->screen_h, 0.0f, -1.0f, 1.0f);
   static glm::mat4 view(1.0f); //temp
 
   //upload sprites to opengl
   glBindBuffer(GL_ARRAY_BUFFER, sprite_batch->sprite_vbo);
-  glBufferData(GL_ARRAY_BUFFER, sizeof(Sprite) * num_sprites, sprites, GL_DYNAMIC_DRAW);
+  glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(Sprite) * num_sprites, sprites);
+
+  //upload transforms to opengl
+  glBindBuffer(GL_ARRAY_BUFFER, sprite_batch->model_vbo);
+  glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(glm::mat4) * num_sprites, models);
   
   glBindVertexArray(sprite_batch->quad_vao);
   glUseProgram(sprite_batch->shader_program);
