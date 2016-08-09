@@ -91,7 +91,7 @@ void on_game_start(Game* game)
     fatal_game_error(ERROR_OPENGL);
 
   // Create sprites
-  create_sprite(&game->sprite, { 0, 0 }, { 100, 100 }, &game->bird_texture);
+  create_sprite(&game->sprite, { 100, 100 }, { 500, 500 }, &game->bird_texture);
   transform_sprite(&game->sprite, {500, 500, 0}, {100, 100}, 0, {0, 0, 1});
   
   // Create sprite batch
@@ -108,12 +108,6 @@ void on_game_finish(Game* game)
   destroy_texture(&game->bird_texture);
   destroy_program(game->shader_program);
   destroy_sprite_batch(&game->sprite_batch);
-}
-
-static Color screen_clear_color = { 0.0, 0.2, 0.3 };
-void clear_color_dispatch(void* params, void* data, size_t size)
-{
-  clear_color((Color*) params);
 }
 
 void sim_update(Game* game, float dt, SDL_Event e)
@@ -149,6 +143,7 @@ void sim_update(Game* game, float dt, SDL_Event e)
 
 void render_update(Game* game)
 {
+  static Color screen_clear_color = { 0.0, 0.2, 0.3 };
   clear_color(&screen_clear_color);
   render_sprites(&game->sprite_batch, &game->sprite, 1);
   SDL_GL_SwapWindow(game->graphics.main_window);

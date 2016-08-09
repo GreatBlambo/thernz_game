@@ -34,6 +34,6 @@ bool sprite_is_valid(Sprite* sprite);
 void sprite_apply_transform(Sprite* sprite, glm::mat4 transform_matrix);
 void transform_sprite(Sprite* sprite, glm::vec3 position, glm::vec2 size,
 		      float rotate, glm::vec3 rotation_axis);
-void sprite_set_position(Sprite* sprite, glm::vec3 position);
-void sprite_set_rotation(Sprite* sprite, float rotate, glm::vec3 rotation_axis);
+void sprite_translate(Sprite* sprite, glm::vec3 transvec);
+void sprite_rotate(Sprite* sprite, float rotate, glm::vec3 rotation_axis);
 void color_sprite(Sprite* sprite, glm::vec4 color);

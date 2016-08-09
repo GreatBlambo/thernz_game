@@ -25,11 +25,13 @@ void transform_sprite(Sprite* sprite, glm::vec3 position, glm::vec2 size,
 
   sprite->model = mvm;
 }
-void sprite_set_position(Sprite* sprite, glm::vec3 position)
+
+void sprite_translate(Sprite* sprite, glm::vec3 transvec)
 {
-  sprite->model = glm::translate(sprite->model, position);
+  sprite->model = glm::translate(sprite->model, transvec);
 }
-void sprite_set_rotation(Sprite* sprite, float rotate, glm::vec3 rotation_axis)
+
+void sprite_rotate(Sprite* sprite, float rotate, glm::vec3 rotation_axis)
 {
   sprite->model = glm::rotate(sprite->model, rotate, rotation_axis);
 }
