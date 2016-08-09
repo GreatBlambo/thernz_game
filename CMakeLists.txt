@@ -33,7 +33,6 @@ add_dependencies(thernz_game assets)
 # Third party
 
 add_subdirectory(thirdparty)
-include_directories(thirdparty/presh_locks/common)
 
 # Import libraries
 
