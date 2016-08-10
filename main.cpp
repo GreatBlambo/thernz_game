@@ -1,6 +1,8 @@
 #include <stdio.h>
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
+#include <glm/glm.hpp>
+#include <glm/gtx/transform.hpp>
 
 #include "rendering.h"
 #include "memory.h"
@@ -18,18 +20,15 @@
 
 struct Game
 {
-  //components
-  Sprite* sprites;
-  glm::mat4* sprite_transforms;
-  size_t num_sprites;
-  size_t max_sprites;
-
-  // systems
+  // temp
   SpriteBatch sprite_batch;
-
+  Sprite* sprites;
+  glm::mat4* transforms;
+  size_t num_sprites;
+  
   // assets
   Texture bird_texture;
-  ShaderProgramID shader_program;
+  ShaderProgramID sprite_shader;
 
   //non-temp
   const char* name;
@@ -74,7 +73,7 @@ void init_game(Game* game, WindowParams* window_params)
   game->name = window_params->name;
   fatal_game_error(init_graphics(&game->graphics, window_params));
   fatal_game_error(create_buffer(&game->main_memory, malloc(MAIN_MEMORY_SIZE), MAIN_MEMORY_SIZE));
-  fatal_game_error(push_buffer(&game->main_memory, &game->frame_memory, FRAME_MEMORY_SIZE));
+  fatal_game_error(create_buffer(&game->frame_memory, malloc(FRAME_MEMORY_SIZE), FRAME_MEMORY_SIZE));
 
   game->quit = false;
 }
@@ -96,41 +95,55 @@ void on_game_start(Game* game)
   if (!shaders[0] || !shaders[1])
     fatal_game_error(ERROR_OPENGL);
   
-  game->shader_program = link_shader_program(shaders, 2);
-  if (!game->shader_program)
+  game->sprite_shader = link_shader_program(shaders, 2);
+  if (!game->sprite_shader)
     fatal_game_error(ERROR_OPENGL);
-  
-  // Create sprite batch
+
   create_sprite_batch(&game->sprite_batch,
                       SCREEN_WIDTH, SCREEN_HEIGHT,
-                      game->bird_texture, game->shader_program
+                      game->bird_texture, game->sprite_shader,
                       MAX_SPRITES);
-
-  //cleanup  
-  detach_shaders(game->shader_program, shaders, 2); 
-  destroy_shader(shaders[0]);
-  destroy_shader(shaders[1]);
-
-  // Components
-  game->sprites = push_array<Sprite>(game->main_memory, MAX_SPRITES);
-  game->sprite_transforms = push_array<glm::mat4>(game->main_memory, MAX_SPRITES);
-  if (!game->sprites
-      || !game->sprite_transforms)
+  
+  game->num_sprites = 100;
+  game->sprites = push_array<Sprite>(&game->main_memory, game->num_sprites);
+  game->transforms = push_array<glm::mat4>(&game->main_memory, game->num_sprites);
+  /=
+  int num_cols = 10;
+  int num_rows = (game->num_sprites / num_cols);
+  for (size_t i = 0; i < game->num_sprites; i++)
   {
-    fatal_error("Not enough memory for data components");
+    float sprite_w = SCREEN_WIDTH / num_cols;
+    float sprite_h = SCREEN_HEIGHT / num_rows;
+    float sprite_x = sprite_w * (i % num_cols);
+    float sprite_y = sprite_h * (i % num_rows);
+    float tex_w = game->bird_texture.w / num_cols;
+    float tex_h = game->bird_texture.h / num_rows;
+    float tex_x = tex_w * (i % num_cols);
+    float tex_y = tex_h * (i % num_rows);
+    glm::mat4 mvm;
+    
+    create_sprite(&game->sprites[i], {tex_x, tex_y}, {tex_w, tex_h},
+                  &game->bird_texture);
+    mvm = glm::translate(mvm, {sprite_x, sprite_y, 0.0f});
+    game->transforms[i] = glm::scale(mvm, {sprite_w, sprite_h, 1.0f});
   }
 
-  // Create sprites
-  for (size_t i = 0; i < MAX_SPRITES; i++)
-  {
-    // create_sprite and shit
-  };
+  /*
+  create_sprite(&game->sprites[0], {0, 0}, {500, 500}, &game->bird_texture);
+  glm::mat4 mvm;
+  mvm = glm::translate(mvm, {500, 500, 0});
+  game->transforms[0] = glm::scale(mvm, {100, 100, 1.0f});
+  */
+  //cleanup  
+  detach_shaders(game->sprite_shader, shaders, 2); 
+  destroy_shader(shaders[0]);
+  destroy_shader(shaders[1]);
 }
 
 void on_game_finish(Game* game)
 {
   destroy_texture(&game->bird_texture);
-  destroy_program(game->shader_program);
+  destroy_program(game->sprite_shader);
   destroy_sprite_batch(&game->sprite_batch);
 }
 
@@ -168,19 +181,27 @@ void sim_update(Game* game, float dt, SDL_Event e)
 void render_update(Game* game)
 {
   static Color screen_clear_color = { 0.0, 0.2, 0.3 };
+  static glm::mat4 view(1.0f);
   clear_color(&screen_clear_color);
-  render_sprites(&game->sprite_batch, &game->sprites, &game->sprite_transforms, 1);
+
+  upload_sprite_batch_data(&game->sprite_batch, game->sprites, game->transforms, game->num_sprites);
+  render_sprites(&game->sprite_batch, view);
+
   SDL_GL_SwapWindow(game->graphics.main_window);
 }
 
 void game_loop(Game* game)
 {
   SDL_Event e;
-  float dt = SDL_GetTicks();
+  float now = SDL_GetPerformanceCounter();
+  float last = 0;
+  float dt;
   while (!game->quit)
   {
     buffer_reset(&game->frame_memory);
-    dt = SDL_GetTicks() - dt;
+    last = now;
+    now = SDL_GetPerformanceCounter();
+    dt = ((now - last) * 1000 / SDL_GetPerformanceFrequency());
     sim_update(game, dt, e);
     render_update(game);
   }

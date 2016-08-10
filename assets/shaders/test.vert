@@ -4,6 +4,7 @@ in vec2 position;
 
 in vec4 color;
 in vec4 sprite_uv;
+
 in mat4 model;
 
 out vec2 frag_texcoords;
