@@ -5,13 +5,11 @@
 #include <glm/gtx/string_cast.hpp>
 
 #include "render_functions.h"
+#include "render_types.h"
 #include "graphics.h"
 #include "memory.h"
 
-#define SPRITE_ATTRIB_POSITION 0
-#define SPRITE_ATTRIB_COLOR 1
-#define SPRITE_ATTRIB_SPRITE_UV 2
-#define SPRITE_ATTRIB_MODEL 3
+extern VertSpec g_sprite_batch_vert_spec;
 
 struct SpriteBatch
 {  

@@ -1,4 +1,5 @@
-#include "rendering.h"
+#include "graphics.h"
+#include "render_types.h"
 
 #include <GL/glew.h>
 #include <SDL2/SDL.h>
@@ -115,7 +116,7 @@ void destroy_shader(ShaderID shader)
   glDeleteShader(shader);
 }
 
-ShaderProgramID link_shader_program(ShaderID* shaders, size_t num_shaders)
+ShaderProgramID link_shader_program(ShaderID* shaders, size_t num_shaders, const VertSpec vertex_spec)
 {
   if (!shaders)
     return 0;
@@ -144,6 +145,12 @@ ShaderProgramID link_shader_program(ShaderID* shaders, size_t num_shaders)
     
     glDeleteProgram(program);
     return 0;
+  }
+
+  for (size_t i = 0; i < vertex_spec.num_attributes; i++)
+  {
+    glBindAttribLocation(program,
+                         vertex_spec.attrib_locations[i], vertex_spec.attrib_names[i]);
   }
   
   return program;

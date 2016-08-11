@@ -4,9 +4,9 @@
 ** TODO Materials and resources system that passes out indicies
 ** TODO GameApi struct that contains function pointers
    - FPs for when the game starts and finishes, and when it's updating.
-** TODO Vertex specification struct to pass around.
 ** TODO Entity component
 *** TODO Tracking entities
 *** TODO Scene graph component, or world position
 *** TODO Sprite component
 ** DONE Batching sprites together with instancing
+** DONE Vertex specification struct to pass around.

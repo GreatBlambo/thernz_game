@@ -2,6 +2,7 @@
 #include <glm/gtc/matrix_transform.hpp>
 
 #include "rendering.h"
+#include "render_types.h"
 
 static const GLfloat quad_vertices[] = {
   1.0f,  1.0f, // Top Right
@@ -13,6 +14,31 @@ static const GLfloat quad_vertices[] = {
 static const uint16_t quad_indices[] = {
   0, 1, 3,
   1, 2, 3
+};
+
+#define SPRITE_ATTRIB_POSITION 0
+#define SPRITE_ATTRIB_COLOR 1
+#define SPRITE_ATTRIB_SPRITE_UV 2
+#define SPRITE_ATTRIB_MODEL 3
+
+static const char* sprite_attrib_names[] = {
+  "position",
+  "color",
+  "sprite_uv",
+  "model"
+};
+
+static int sprite_attrib_locations[] = {
+  SPRITE_ATTRIB_POSITION,
+  SPRITE_ATTRIB_COLOR,
+  SPRITE_ATTRIB_SPRITE_UV,
+  SPRITE_ATTRIB_MODEL
+};
+
+VertSpec g_sprite_batch_vert_spec = {
+  .attrib_names = sprite_attrib_names,
+  .attrib_locations = sprite_attrib_locations,
+  .num_attributes = ARRAY_SIZE(sprite_attrib_names)
 };
 
 void create_sprite_batch(SpriteBatch* sprite_batch,

@@ -97,16 +97,10 @@ void on_game_start(Game* game)
   if (!shaders[0] || !shaders[1])
     fatal_game_error(ERROR_OPENGL);
   
-  game->sprite_shader = link_shader_program(shaders, 2);
+  game->sprite_shader = link_shader_program(shaders, 2, g_sprite_batch_vert_spec);
   if (!game->sprite_shader)
     fatal_game_error(ERROR_OPENGL);
   
-  // Bind attribute locations
-  glBindAttribLocation(game->sprite_shader, SPRITE_ATTRIB_POSITION, "position");
-  glBindAttribLocation(game->sprite_shader, SPRITE_ATTRIB_COLOR, "color");
-  glBindAttribLocation(game->sprite_shader, SPRITE_ATTRIB_SPRITE_UV, "sprite_uv");
-  glBindAttribLocation(game->sprite_shader, SPRITE_ATTRIB_MODEL, "model");
-
   create_sprite_batch(&game->sprite_batch,
                       SCREEN_WIDTH, SCREEN_HEIGHT,
                       game->bird_texture, game->sprite_shader,
