@@ -24,10 +24,10 @@ struct Texture
 
 struct Sprite
 {
-  glm::vec4 color = { 1.0f, 1.0f, 1.0f, 1.0f };
+  glm::vec4 color;
   glm::vec4 sprite_uv;
 };
 
-void create_sprite(Sprite* sprite, glm::vec2 texture_offset, glm::vec2 sprite_dims, Texture* texture);
+void create_sprite(Sprite* sprite, glm::vec2 texture_offset, glm::vec2 sprite_dims, Texture* texture, Color color = { 1.0f, 1.0f, 1.0f });
 bool sprite_is_valid(Sprite* sprite);
 void color_sprite(Sprite* sprite, glm::vec4 color);

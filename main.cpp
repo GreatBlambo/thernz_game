@@ -25,6 +25,8 @@ struct Game
   Sprite* sprites;
   glm::mat4* transforms;
   size_t num_sprites;
+
+  int num_cols;
   
   // assets
   Texture bird_texture;
@@ -98,6 +100,12 @@ void on_game_start(Game* game)
   game->sprite_shader = link_shader_program(shaders, 2);
   if (!game->sprite_shader)
     fatal_game_error(ERROR_OPENGL);
+  
+  // Bind attribute locations
+  glBindAttribLocation(game->sprite_shader, SPRITE_ATTRIB_POSITION, "position");
+  glBindAttribLocation(game->sprite_shader, SPRITE_ATTRIB_COLOR, "color");
+  glBindAttribLocation(game->sprite_shader, SPRITE_ATTRIB_SPRITE_UV, "sprite_uv");
+  glBindAttribLocation(game->sprite_shader, SPRITE_ATTRIB_MODEL, "model");
 
   create_sprite_batch(&game->sprite_batch,
                       SCREEN_WIDTH, SCREEN_HEIGHT,
@@ -107,19 +115,23 @@ void on_game_start(Game* game)
   game->num_sprites = 100;
   game->sprites = push_array<Sprite>(&game->main_memory, game->num_sprites);
   game->transforms = push_array<glm::mat4>(&game->main_memory, game->num_sprites);
-  /=
-  int num_cols = 10;
-  int num_rows = (game->num_sprites / num_cols);
+
+  game->num_cols = 10;
+  int num_rows = (game->num_sprites / game->num_cols);
+  int col = 0;
+  int row = 0;
+  float sprite_w = SCREEN_WIDTH / game->num_cols;
+  float sprite_h = SCREEN_HEIGHT / num_rows;
   for (size_t i = 0; i < game->num_sprites; i++)
   {
-    float sprite_w = SCREEN_WIDTH / num_cols;
-    float sprite_h = SCREEN_HEIGHT / num_rows;
-    float sprite_x = sprite_w * (i % num_cols);
-    float sprite_y = sprite_h * (i % num_rows);
-    float tex_w = game->bird_texture.w / num_cols;
+    col = i % game->num_cols;
+    row = i / game->num_cols;
+    float sprite_x = sprite_w * (col);
+    float sprite_y = sprite_h * (row);
+    float tex_w = game->bird_texture.w / game->num_cols;
     float tex_h = game->bird_texture.h / num_rows;
-    float tex_x = tex_w * (i % num_cols);
-    float tex_y = tex_h * (i % num_rows);
+    float tex_x = tex_w * (col);
+    float tex_y = tex_h * (row);
     glm::mat4 mvm;
     
     create_sprite(&game->sprites[i], {tex_x, tex_y}, {tex_w, tex_h},
@@ -127,13 +139,9 @@ void on_game_start(Game* game)
     mvm = glm::translate(mvm, {sprite_x, sprite_y, 0.0f});
     game->transforms[i] = glm::scale(mvm, {sprite_w, sprite_h, 1.0f});
   }
-
-  /*
-  create_sprite(&game->sprites[0], {0, 0}, {500, 500}, &game->bird_texture);
-  glm::mat4 mvm;
-  mvm = glm::translate(mvm, {500, 500, 0});
-  game->transforms[0] = glm::scale(mvm, {100, 100, 1.0f});
-  */
+  
+  upload_sprite_batch_data(&game->sprite_batch, game->sprites, game->transforms, game->num_sprites);
+  
   //cleanup  
   detach_shaders(game->sprite_shader, shaders, 2); 
   destroy_shader(shaders[0]);
@@ -176,6 +184,7 @@ void sim_update(Game* game, float dt, SDL_Event e)
       break;
     }
   }
+  upload_sprite_batch_data(&game->sprite_batch, game->sprites, game->transforms, game->num_sprites);
 }
 
 void render_update(Game* game)
@@ -184,7 +193,6 @@ void render_update(Game* game)
   static glm::mat4 view(1.0f);
   clear_color(&screen_clear_color);
 
-  upload_sprite_batch_data(&game->sprite_batch, game->sprites, game->transforms, game->num_sprites);
   render_sprites(&game->sprite_batch, view);
 
   SDL_GL_SwapWindow(game->graphics.main_window);
