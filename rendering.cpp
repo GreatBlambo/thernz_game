@@ -47,7 +47,7 @@ VertSpec g_sprite_batch_vert_spec = {
 
 void create_sprite_batch(SpriteBatch* sprite_batch,
                          float screen_w, float screen_h,
-                         Texture sprite_atlas, ShaderProgramID shader_program,
+                         const Texture sprite_atlas, ShaderProgramID shader_program,
                          size_t max_sprites)
 {
   
