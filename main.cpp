@@ -126,6 +126,7 @@ void on_game_start(Game* game)
     float tex_h = game->bird_texture.h / num_rows;
     float tex_x = tex_w * (col);
     float tex_y = tex_h * (row);
+    
     glm::mat4 mvm;
     
     create_sprite(&game->sprites[i], {tex_x, tex_y}, {tex_w, tex_h},
@@ -135,8 +136,6 @@ void on_game_start(Game* game)
   }
   
   upload_sprite_batch_data(&game->sprite_batch, game->sprites, game->transforms, game->num_sprites);
-  
-  //cleanup  
   detach_shaders(game->sprite_shader, shaders, 2); 
   destroy_shader(shaders[0]);
   destroy_shader(shaders[1]);

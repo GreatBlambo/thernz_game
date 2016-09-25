@@ -116,7 +116,7 @@ void destroy_shader(ShaderID shader)
   glDeleteShader(shader);
 }
 
-ShaderProgramID link_shader_program(ShaderID* shaders, size_t num_shaders, const VertSpec vertex_spec)
+ShaderProgramID link_shader_program(ShaderID* shaders, size_t num_shaders, const VertSpec& vertex_spec)
 {
   if (!shaders)
     return 0;
@@ -233,7 +233,7 @@ GameError init_graphics(Graphics* graphics, WindowParams* window_params)
   SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
  
   SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
-  SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 2);
+  SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);
   
   // Turn on double buffering with a 24bit Z buffer.
   // You may need to change this to 16 or 32 for your system
@@ -255,7 +255,6 @@ GameError init_graphics(Graphics* graphics, WindowParams* window_params)
     return ERROR_GLEW;
   }
 
-  glViewport(0, 0, window_params->rect.w, window_params->rect.h);
   glEnable(GL_BLEND);
   glEnable(GL_DEPTH_TEST);
   glDepthFunc(GL_LESS);

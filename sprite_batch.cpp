@@ -141,7 +141,8 @@ void upload_sprite_batch_data(SpriteBatch* sprite_batch, Sprite* sprites, glm::m
 
 void render_sprites(SpriteBatch* sprite_batch, glm::mat4 view)
 {
-  static glm::mat4 projection = glm::ortho(0.0f, sprite_batch->screen_w, sprite_batch->screen_h, 0.0f, -1.0f, 1.0f);
+  //static glm::mat4 projection = glm::ortho(0.0f, 1.0f, 0.0f, 1.0f, -1.0f, 1.0f);
+  static glm::mat4 projection = glm::ortho(0.0f, sprite_batch->screen_w, 0.0f, sprite_batch->screen_h, -1.0f, 1.0f);
   
   glBindVertexArray(sprite_batch->quad_vao);
   glUseProgram(sprite_batch->shader_program);

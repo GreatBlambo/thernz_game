@@ -32,7 +32,7 @@ void destroy_texture(Texture* texture);
 // Shaders
 ShaderID load_shader_source(const char* pathname, GLenum shader_type);
 void destroy_shader(ShaderID shader);
-ShaderProgramID link_shader_program(ShaderID* shaders, size_t num_shaders, const VertSpec vertex_spec);
+ShaderProgramID link_shader_program(ShaderID* shaders, size_t num_shaders, const VertSpec& vertex_spec);
 void destroy_program(ShaderProgramID program);
 GameError detach_shaders(ShaderProgramID program, ShaderID* shaders, size_t num_shaders);
 
