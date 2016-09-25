@@ -242,7 +242,7 @@ GameError init_graphics(Graphics* graphics, WindowParams* window_params)
   graphics->context = SDL_GL_CreateContext(graphics->main_window);
   if (!graphics->context)
   {
-    printf("Failed to create OpenGL context\n");
+    printf("Failed to create OpenGL context: %s\n", SDL_GetError());
     return ERROR_OPENGL;
   }
 

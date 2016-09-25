@@ -16,6 +16,7 @@ set(SOURCES main.cpp
             rendering.cpp
             render_functions.cpp
 	    render_types.cpp
+            sprite_batch.cpp
             graphics.cpp
             error_codes.cpp)
 
