@@ -5,5 +5,7 @@
 ** TODO GameApi struct that contains function pointers
    - FPs for when the game starts and finishes, and when it's updating.
 ** TODO Clean up the code a bit
-
-
+** TODO Multithreaded rendering
+   - Thread local queues that build up commands
+   - Synchronized submit function that accepts queues and fills in a master linked list
+   - Master list that can be passed to a render thread, which does sorting and rendering
