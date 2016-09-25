@@ -9,3 +9,9 @@
    - Thread local queues that build up commands
    - Synchronized submit function that accepts queues and fills in a master linked list
    - Master list that can be passed to a render thread, which does sorting and rendering
+** TODO Entity component
+*** TODO Tracking entities
+*** TODO Scene graph component, or world position
+*** TODO Sprite component
+** DONE Batching sprites together with instancing
+** DONE Vertex specification struct to pass around.
