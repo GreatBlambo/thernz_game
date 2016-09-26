@@ -116,23 +116,26 @@ void on_game_start(Game* game)
   int row = 0;
   float sprite_w = SCREEN_WIDTH / game->num_cols;
   float sprite_h = SCREEN_HEIGHT / num_rows;
+  float tex_w = game->bird_texture.w / game->num_cols;
+  float tex_h = game->bird_texture.h / num_rows;
   for (size_t i = 0; i < game->num_sprites; i++)
   {
     col = i % game->num_cols;
     row = i / game->num_cols;
     float sprite_x = sprite_w * (col);
     float sprite_y = sprite_h * (row);
-    float tex_w = game->bird_texture.w / game->num_cols;
-    float tex_h = game->bird_texture.h / num_rows;
-    float tex_x = tex_w * (col);
-    float tex_y = tex_h * (row);
-    
-    glm::mat4 mvm;
-    
+    float tex_x = tex_w * col;
+    float tex_y = tex_h * row;
+
+    float color_index = (float) i/(float) game->num_sprites;
     create_sprite(&game->sprites[i], {tex_x, tex_y}, {tex_w, tex_h},
-                  &game->bird_texture);
+                  &game->bird_texture, {color_index, 1 - color_index, color_index});
+      
+
+    glm::mat4 mvm;
     mvm = glm::translate(mvm, {sprite_x, sprite_y, 0.0f});
-    game->transforms[i] = glm::scale(mvm, {sprite_w, sprite_h, 1.0f});
+    mvm = glm::scale(mvm, {sprite_w, sprite_h, 1.0f});
+    game->transforms[i] = mvm;
   }
   
   upload_sprite_batch_data(&game->sprite_batch, game->sprites, game->transforms, game->num_sprites);
@@ -183,7 +186,7 @@ void sim_update(Game* game, float dt, SDL_Event e)
 void render_update(Game* game)
 {
   static Color screen_clear_color = { 0.0, 0.2, 0.3 };
-  static glm::mat4 view(1.0f);
+  static glm::mat4 view;
   clear_color(&screen_clear_color);
 
   render_sprites(&game->sprite_batch, view);

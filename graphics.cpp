@@ -126,8 +126,14 @@ ShaderProgramID link_shader_program(ShaderID* shaders, size_t num_shaders, const
   {
     glAttachShader(program, shaders[i]);
   }
-  glLinkProgram(program);
+  for (size_t i = 0; i < vertex_spec.num_attributes; i++)
+  {
+    glBindAttribLocation(program,
+                         vertex_spec.attrib_locations[i], vertex_spec.attrib_names[i]);
+  }
 
+  glLinkProgram(program);
+  
   int is_linked;
   glGetProgramiv(program, GL_LINK_STATUS, &is_linked);
 
@@ -145,12 +151,6 @@ ShaderProgramID link_shader_program(ShaderID* shaders, size_t num_shaders, const
     
     glDeleteProgram(program);
     return 0;
-  }
-
-  for (size_t i = 0; i < vertex_spec.num_attributes; i++)
-  {
-    glBindAttribLocation(program,
-                         vertex_spec.attrib_locations[i], vertex_spec.attrib_names[i]);
   }
   
   return program;
