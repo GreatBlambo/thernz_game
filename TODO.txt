@@ -2,8 +2,6 @@
 ** TODO Finish off sprite rendering and the renderer.
    - Look into sprite batch caching sprite info by keeping track of some "resource ID"
 ** TODO Materials and resources system that passes out indicies
-** TODO GameApi struct that contains function pointers
-   - FPs for when the game starts and finishes, and when it's updating.
 ** TODO Clean up the code a bit
 ** TODO Multithreaded rendering
    - Thread local queues that build up commands
@@ -13,5 +11,6 @@
 *** TODO Tracking entities
 *** TODO Scene graph component, or world position
 *** TODO Sprite component
+** TODO Create different typedefs of shader for each vertspec
 ** DONE Batching sprites together with instancing
 ** DONE Vertex specification struct to pass around.

@@ -1,8 +1,6 @@
 #include <game.h>
 #include <config.h>
 
-#include <thirdparty/tinyobjloader/tiny_obj_loader.h>
-
 struct ThernzGame : public Game
 {
   void on_game_start();
@@ -34,9 +32,6 @@ void ThernzGame::input_callback(SDL_Event e)
     case(SDLK_ESCAPE):
       printf("quit\n");
       quit = true;
-      break;
-    case(SDLK_f):
-      printf("squad\n");
       break;
     default:
       break;
