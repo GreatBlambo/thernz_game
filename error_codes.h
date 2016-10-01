@@ -28,6 +28,8 @@ static const char* error_strings[] =
   , "Array size"
 };
 
+#define ASSERT(cond, msg) do { if (!cond) { fprintf(stderr, "ASSERT FAILURE: \"" #cond "\"\n"); fprintf(stderr, msg "\n"); exit(1); } } while(0);
+
 void check_trace_game_error(GameError err);
 void fatal_game_error(GameError err);
 void error(const char* fmt, ...);

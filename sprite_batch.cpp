@@ -46,7 +46,8 @@ VertSpec g_sprite_batch_vert_spec = {
 };
 
 void create_sprite_batch(SpriteBatch* sprite_batch,
-                         float screen_w, float screen_h,
+                         float screen_res_w,
+                         float screen_res_h,
                          const Texture sprite_atlas, ShaderProgramID shader_program,
                          size_t max_sprites)
 {
@@ -57,8 +58,7 @@ void create_sprite_batch(SpriteBatch* sprite_batch,
   sprite_batch->view_loc = glGetUniformLocation(shader_program, "view");
 
   // Set parameters
-  sprite_batch->screen_w = screen_w;
-  sprite_batch->screen_h = screen_h;
+  sprite_batch->projection = glm::ortho(0.0f, screen_res_w, screen_res_h, 0.0f, -1.0f, 1.0f);
   sprite_batch->sprite_atlas = sprite_atlas;
   sprite_batch->num_sprites = 0;
   
@@ -140,13 +140,10 @@ void upload_sprite_batch_data(SpriteBatch* sprite_batch, Sprite* sprites, glm::m
 }
 
 void render_sprites(SpriteBatch* sprite_batch, glm::mat4 view)
-{
-  //static glm::mat4 projection = glm::ortho(0.0f, 1.0f, 0.0f, 1.0f, -1.0f, 1.0f);
-  static glm::mat4 projection = glm::ortho(0.0f, sprite_batch->screen_w, sprite_batch->screen_h, 0.0f, -1.0f, 1.0f);
-  
+{  
   glBindVertexArray(sprite_batch->quad_vao);
   glUseProgram(sprite_batch->shader_program);
-  glUniformMatrix4fv(sprite_batch->projection_loc, 1, false, glm::value_ptr(projection));
+  glUniformMatrix4fv(sprite_batch->projection_loc, 1, false, glm::value_ptr(sprite_batch->projection));
   glUniformMatrix4fv(sprite_batch->view_loc, 1, false, glm::value_ptr(view));
   
   glActiveTexture(GL_TEXTURE0);

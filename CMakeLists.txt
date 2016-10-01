@@ -12,16 +12,21 @@ endif()
 
 # Source files
 
-set(SOURCES main.cpp
-            rendering.cpp
+set(SOURCES rendering.cpp
             render_functions.cpp
 	    render_types.cpp
             sprite_batch.cpp
             graphics.cpp
-            error_codes.cpp)
+            error_codes.cpp
+            game.cpp
+            config.cpp)
 
-add_executable(thernz_game ${SOURCES})
+add_library(game_lib STATIC ${SOURCES})
+
+include_directories("./")
+add_executable(thernz_game main.cpp)
 target_compile_features(thernz_game PRIVATE cxx_range_for)
+
 add_definitions(-DGLEW_STATIC)
 
 # Copy assets folder
@@ -29,7 +34,7 @@ file(GLOB_RECURSE ASSETS ${CMAKE_CURRENT_SOURCE_DIR}/assets/*)
 add_custom_target(assets ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/assets assets
                          SOURCES ${ASSETS})
 
-add_dependencies(thernz_game assets)
+add_dependencies(game_lib assets)
 
 # Third party
 
@@ -64,10 +69,14 @@ find_package(glm REQUIRED STATIC)
 include_directories(${GLM_INCLUDE_DIR})
 
 # Link target libraries
+set(LIBS game_lib
+         opengl
+         glew
+         sdl2
+         sdl2_image
+         sdl2_main
+         tinyobjloader)
 
-target_link_libraries(thernz_game
-  opengl
-  glew
-  sdl2
-  sdl2_image
-  sdl2_main)
+add_subdirectory(tests)
+
+target_link_libraries(thernz_game ${LIBS})

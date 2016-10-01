@@ -25,12 +25,11 @@ struct SpriteBatch
 
   size_t num_sprites;
 
-  float screen_w;
-  float screen_h;
+  glm::mat4 projection;
 };
 
 void create_sprite_batch(SpriteBatch* sprite_batch,
-                         float screen_w, float screen_h,
+                         float screen_res_w, float screen_res_h,
                          const Texture sprite_atlas, ShaderProgramID shader_program,
                          size_t max_sprites);
 void upload_sprite_batch_data(SpriteBatch* sprite_batch, Sprite* sprites, glm::mat4* models, size_t num_sprites);
