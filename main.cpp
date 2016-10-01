@@ -3,33 +3,27 @@
 
 #include <thirdparty/tinyobjloader/tiny_obj_loader.h>
 
-struct ThernzGame
+struct ThernzGame : public Game
 {
-  static void on_game_start(Game* game, ThernzGame* game_data);
-  static void on_game_update(Game* game, ThernzGame* game_data, float dt);
-  static void on_game_finish(Game* game, ThernzGame* game_data);
-  static void input_callback(Game* game, ThernzGame* game_data, SDL_Event e);
+  void on_game_start();
+  void on_game_update(float dt);
+  void on_game_finish();
+  void input_callback(SDL_Event e);
 };
 
-int main(int, char**)
-{
-  run_game<ThernzGame>(&g_window_params, MAIN_MEMORY_SIZE, FRAME_MEMORY_SIZE);
-  return 0;
-}
-
-void ThernzGame::on_game_start(Game* game, ThernzGame* game_data)
+void ThernzGame::on_game_start()
 {
 }
 
-void ThernzGame::on_game_update(Game* game, ThernzGame* game_data, float dt)
+void ThernzGame::on_game_update(float dt)
 {
 }
 
-void ThernzGame::on_game_finish(Game* game, ThernzGame* game_data)
+void ThernzGame::on_game_finish()
 {
 }
 
-void ThernzGame::input_callback(Game* game, ThernzGame* game_data, SDL_Event e)
+void ThernzGame::input_callback(SDL_Event e)
 {
   switch(e.type)
   {
@@ -39,7 +33,7 @@ void ThernzGame::input_callback(Game* game, ThernzGame* game_data, SDL_Event e)
     {
     case(SDLK_ESCAPE):
       printf("quit\n");
-      game->quit = true;
+      quit = true;
       break;
     case(SDLK_f):
       printf("squad\n");
@@ -52,4 +46,11 @@ void ThernzGame::input_callback(Game* game, ThernzGame* game_data, SDL_Event e)
   default:
     break;
   }
+}
+
+int main(int, char**)
+{
+  ThernzGame game;
+  game.run(&g_window_params, MAIN_MEMORY_SIZE, FRAME_MEMORY_SIZE);
+  return 0;
 }
