@@ -19,6 +19,11 @@ struct MeshData
   size_t num_verts;
 };
 
+struct MaterialData
+{
+  
+};
+
 void create_mesh_data_from_obj(const char* filename, Buffer* buffer);
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -34,6 +39,10 @@ struct Mesh
   VertexArrayID index_buffer;
   IndexArrayID attrib_array;
   size_t num_indices;
+};
+
+struct Material
+{
 };
 
 extern VertSpec g_mesh_vert_spec;
