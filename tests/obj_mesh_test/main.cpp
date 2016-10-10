@@ -46,6 +46,6 @@ void App::input_callback(SDL_Event e)
 int main(int, char**)
 {
   App game;
-  game.run(&g_window_params, MAIN_MEMORY_SIZE, FRAME_MEMORY_SIZE);
+  game.run(GIGABYTE(1), GIGABYTE(1), false, 800, 600);
   return 0;
 }

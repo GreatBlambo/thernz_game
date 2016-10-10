@@ -32,6 +32,7 @@ protected:
   FrameDataBuffer frame_memory;
   
 private:
-  void init(WindowParams* window_params, size_t main_memory_size, size_t frame_memory_size);
+  void init(const char* name, const size_t main_memory_size, const size_t frame_memory_size, const float w, bool fullscreen, const float h, const float x = SDL_WINDOWPOS_UNDEFINED, const float y = SDL_WINDOWPOS_UNDEFINED);
+  void init(WindowParams* window_params, const size_t main_memory_size, const size_t frame_memory_size);
   void deinit();
 };
