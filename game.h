@@ -15,8 +15,10 @@
 
 struct Game
 {
+  void run(const char* name, const size_t main_memory_size, const size_t frame_memory_size, const bool fullscreen, const int w, const int h, const int x = SDL_WINDOWPOS_UNDEFINED, const int y = SDL_WINDOWPOS_UNDEFINED);
+  
   void run(WindowParams* window_params,
-           size_t main_memory_size, size_t frame_memory_size);
+           const size_t main_memory_size, const size_t frame_memory_size);
 
 protected:
   virtual void on_game_start() = 0;
@@ -32,7 +34,6 @@ protected:
   FrameDataBuffer frame_memory;
   
 private:
-  void init(const char* name, const size_t main_memory_size, const size_t frame_memory_size, const float w, bool fullscreen, const float h, const float x = SDL_WINDOWPOS_UNDEFINED, const float y = SDL_WINDOWPOS_UNDEFINED);
   void init(WindowParams* window_params, const size_t main_memory_size, const size_t frame_memory_size);
   void deinit();
 };

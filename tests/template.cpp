@@ -1,5 +1,4 @@
 #include <game.h>
-#include <config.h>
 
 struct App : public Game
 {
@@ -46,6 +45,6 @@ void App::input_callback(SDL_Event e)
 int main(int, char**)
 {
   App game;
-  game.run(&g_window_params, MAIN_MEMORY_SIZE, FRAME_MEMORY_SIZE);
+  game.run("Game", GIGABYTE(1), GIGABYTE(1), false, 800.0f, 600.0f);
   return 0;
 }
