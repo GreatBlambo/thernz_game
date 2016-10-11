@@ -19,7 +19,9 @@ set(SOURCES rendering.cpp
             graphics.cpp
             error_codes.cpp
             game.cpp
-            config.cpp)
+            config.cpp
+            mesh.cpp
+            handle.cpp)
 
 add_library(game_lib STATIC ${SOURCES})
 
@@ -75,6 +77,7 @@ set(LIBS game_lib
          sdl2
          sdl2_image
          sdl2_main
+         header_only_libs
          tinyobjloader)
 
 add_subdirectory(tests)

@@ -7,3 +7,6 @@
 [submodule "tinyobjloader-c"]
 	path = tinyobjloader-c
 	url = https://github.com/syoyo/tinyobjloader-c.git
+[submodule "thirdparty/tinyobjloader-c"]
+	path = thirdparty/tinyobjloader-c
+	url = https://github.com/syoyo/tinyobjloader-c.git

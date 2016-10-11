@@ -1,6 +1,7 @@
 #pragma once
 
 #include <stdio.h>
+#include <stdlib.h>
 
 enum GameError
 {
@@ -28,9 +29,9 @@ static const char* error_strings[] =
   , "Array size"
 };
 
-#define ASSERT(cond, msg) do { if (!cond) { fprintf(stderr, "ASSERT FAILURE: \"" #cond "\"\n"); fprintf(stderr, msg "\n"); exit(1); } } while(0);
-
 void check_trace_game_error(GameError err);
 void fatal_game_error(GameError err);
 void error(const char* fmt, ...);
 void fatal_error(const char* fmt, ...);
+
+#define ASSERT(cond, ...) do { if (!cond) { fprintf(stderr, "ASSERT FAILURE: \"" #cond "\"\n"); fprintf(stderr, __VA_ARGS__ ); exit(0);} } while(0)

@@ -5,3 +5,6 @@ target_link_libraries(sprite_batch_test ${LIBS})
 
 add_executable(obj_mesh_test obj_mesh_test/main.cpp)
 target_link_libraries(obj_mesh_test ${LIBS})
+
+add_executable(handle_test handle_test/main.cpp)
+target_link_libraries(handle_test ${LIBS})

@@ -6,27 +6,6 @@
 #include "memory.h"
 
 ////////////////////////////////////////////////////////////////////////////////
-// Mesh Data
-////////////////////////////////////////////////////////////////////////////////
-
-struct MeshData
-{
-  glm::vec3* positions;
-  glm::vec3* normals;
-  glm::vec2* tex_coords;
-  size_t* indices;
-  
-  size_t num_verts;
-};
-
-struct MaterialData
-{
-  
-};
-
-void create_mesh_data_from_obj(const char* filename, Buffer* buffer);
-
-////////////////////////////////////////////////////////////////////////////////
 // Mesh (render data for meshes)
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -47,6 +26,6 @@ struct Material
 
 extern VertSpec g_mesh_vert_spec;
 
-void create_mesh(Mesh* result, const MeshData* mesh_data);
+bool load_mesh_from_obj(Mesh* result, const char* filename);
 void destroy_mesh(Mesh* mesh);
 void draw_mesh(Mesh* m);

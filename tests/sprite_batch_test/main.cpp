@@ -58,8 +58,8 @@ void SpriteApp::on_game_start()
                       MAX_SPRITES);
   
   num_sprites = 100;
-  sprites = push_array<Sprite>(&main_memory, num_sprites);
-  transforms = push_array<glm::mat4>(&main_memory, num_sprites);
+  sprites = push_array(Sprite, &main_memory, num_sprites);
+  transforms = push_array(glm::mat4, &main_memory, num_sprites);
 
   num_cols = 10;
   int num_rows = (num_sprites / num_cols);

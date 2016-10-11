@@ -1,3 +1,4 @@
+#include <mesh.h>
 #include <game.h>
 
 struct App : public Game

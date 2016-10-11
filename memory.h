@@ -1,6 +1,7 @@
 #pragma once
 #include <stddef.h>
 #include <stdint.h>
+#include <string.h>
 #include <atomic>
 
 #include "error_codes.h"
@@ -78,17 +79,10 @@ inline GameError push_buffer(GenericBuffer<OffsetType>* source, GenericBuffer<Ot
   return create_buffer(result, push_size(source, size, align), size);
 }
 
-template <typename T, typename OffsetType>
-inline T* push_array(GenericBuffer<OffsetType>* source, size_t length, size_t align = DEFAULT_ALIGN)
-{
-  return (T*) push_size(source, sizeof(T) * length, align);
-}
-
-template <typename T, typename OffsetType>
-inline T* push_struct(GenericBuffer<OffsetType>* source, size_t align = DEFAULT_ALIGN)
-{
-  return push_array<T>(source, 1, align);
-}
+#define zero_buffer(buffer) memset(buffer->start, 0, buffer->size)
+#define push_array(T, buffer, length) (T*) push_size(buffer, sizeof(T) * length)
+#define zero_array(array, length) memset(array, 0, sizeof(*array) * length)
+#define push_struct(T, buffer) push_array(T, buffer, 1)
 
 template <typename OffsetType>
 inline size_t buffer_get_remaining(const GenericBuffer<OffsetType>* buffer)
