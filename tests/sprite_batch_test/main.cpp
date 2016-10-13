@@ -3,11 +3,14 @@
 #include <SDL2/SDL_image.h>
 #include <glm/glm.hpp>
 #include <glm/gtx/transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
 
 #include <game.h>
+#include <sprite_batch.h>
 #include <config.h>
 
 #define MAX_SPRITES 1024
+#define METERS_PER_PIXEL 1.0f/10.0f
 
 struct SpriteApp : public Game
 {
@@ -17,9 +20,11 @@ struct SpriteApp : public Game
   size_t num_sprites;
 
   int num_cols;
+
+  UniformBufferID cam_ubo;
   
   // assets
-  Texture bird_texture;
+  Texture texture;
   ShaderProgramID sprite_shader;
   
   void on_game_start();
@@ -40,7 +45,7 @@ int main(int, char**)
 void SpriteApp::on_game_start()
 {
   // Load assets
-  fatal_game_error(load_image_as_texture(&bird_texture, "assets/bird.png"));
+  fatal_game_error(load_image_as_texture(&texture, "assets/super-mario-sprite.png"));
 
   ShaderID shaders[2];
   shaders[0] = load_shader_source("assets/shaders/test.vert", GL_VERTEX_SHADER);
@@ -51,11 +56,17 @@ void SpriteApp::on_game_start()
   sprite_shader = link_shader_program(shaders, 2, g_sprite_batch_vert_spec);
   if (!sprite_shader)
     fatal_game_error(ERROR_OPENGL);
+
+  shader_bind_ubo_block(sprite_shader, "CameraData", 0);
+  cam_ubo = create_ubo_dynamic(2 * sizeof(glm::mat4), 0);
+
+  glm::mat4 projection = glm::ortho(0.0f, (float) window.rect.w * METERS_PER_PIXEL, (float) window.rect.h * METERS_PER_PIXEL, 0.0f, -1.0f, 1.0f);
+  upload_ubo_data(cam_ubo, 0, sizeof(glm::mat4), glm::value_ptr(projection));
   
-  create_sprite_batch(&sprite_batch,
-                      SCREEN_WIDTH, SCREEN_HEIGHT,
-                      bird_texture, sprite_shader,
-                      MAX_SPRITES);
+  glm::mat4 view(1.0f);
+  upload_ubo_data(cam_ubo, sizeof(glm::mat4), sizeof(glm::mat4), glm::value_ptr(view));
+  
+  create_sprite_batch(&sprite_batch, MAX_SPRITES);
   
   num_sprites = 100;
   sprites = push_array(Sprite, &main_memory, num_sprites);
@@ -65,26 +76,25 @@ void SpriteApp::on_game_start()
   int num_rows = (num_sprites / num_cols);
   int col = 0;
   int row = 0;
-  float sprite_w = SCREEN_WIDTH / num_cols;
-  float sprite_h = SCREEN_HEIGHT / num_rows;
-  float tex_w = bird_texture.w / num_cols;
-  float tex_h = bird_texture.h / num_rows;
+  float tex_w = texture.w / num_cols;
+  float tex_h = texture.h / num_rows;
   for (size_t i = 0; i < num_sprites; i++)
   {
     col = i % num_cols;
     row = i / num_cols;
-    float sprite_x = sprite_w * (col);
-    float sprite_y = sprite_h * (row);
+    float sprite_x = tex_w * (col) * METERS_PER_PIXEL;
+    float sprite_y = tex_h * (row) * METERS_PER_PIXEL;
     float tex_x = tex_w * col;
     float tex_y = tex_h * row;
+    float sprite_w = tex_w * METERS_PER_PIXEL;
+    float sprite_h = tex_h * METERS_PER_PIXEL;
 
     float color_index = (float) i/(float) num_sprites;
-    create_sprite(&sprites[i], {tex_x, tex_y}, {tex_w, tex_h},
-                  &bird_texture, {color_index, 1 - color_index, color_index});
+    create_sprite(&sprites[i], {tex_x, tex_y}, {tex_w, tex_h}, &texture);
       
 
     glm::mat4 mvm;
-    mvm = glm::translate(mvm, {sprite_x, sprite_y, 0.0f});
+    mvm = glm::translate(mvm, {sprite_x , sprite_y, 0.0f});
     mvm = glm::scale(mvm, {sprite_w, sprite_h, 1.0f});
     transforms[i] = mvm;
   }
@@ -97,18 +107,18 @@ void SpriteApp::on_game_start()
 
 void SpriteApp::on_game_finish()
 {
-  destroy_texture(&bird_texture);
+  destroy_texture(&texture);
   destroy_program(sprite_shader);
   destroy_sprite_batch(&sprite_batch);
+  delete_ubo(cam_ubo);
 }
 
 void SpriteApp::render_update()
 {
   static Color screen_clear_color = { 0.0, 0.2, 0.3 };
-  static glm::mat4 view;
   clear_color(&screen_clear_color);
 
-  render_sprites(&sprite_batch, view);
+  render_sprites(&sprite_batch, texture, sprite_shader);
 
   SDL_GL_SwapWindow(graphics.main_window);
 }

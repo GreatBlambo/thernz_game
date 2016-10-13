@@ -3,6 +3,7 @@
 #include <stdint.h>
 
 #include <memory.h>
+#include <queue.h>
 
 #define HANDLE_INDEX_BITS 22
 #define HANDLE_INDEX_MASK (1 << HANDLE_INDEX_BITS) - 1
@@ -30,12 +31,9 @@ inline Handle generate_handle(uint32_t index, uint16_t generation)
 struct HandleArray
 {
   uint16_t* generations;
-  size_t* free_indices;
+  Queue<uint32_t> free_indices;
   size_t num_handles;
   size_t max_handles;
-
-  size_t next_free_index;
-  size_t num_gaps;
 
   size_t min_free_indicies;
 };

@@ -3,18 +3,33 @@
 #include <GL/glew.h>
 #include <glm/glm.hpp>
 
+#include "error_codes.h"
+#include "memory.h"
+
 typedef glm::vec3 Color;
 
 typedef GLuint TextureID;
 typedef GLuint VertexBufferID;
 typedef GLuint VertexArrayID;
 typedef GLuint IndexArrayID;
+typedef GLuint UniformBufferID;
 
 typedef GLuint ShaderID;
 typedef GLuint ShaderProgramID;
 
 #define PI 3.1415926535
 #define DEGREES_TO_RADS(x) x * PI/180
+
+////////////////////////////////////////////////////////////////////////////////
+// Vertex Specification
+////////////////////////////////////////////////////////////////////////////////
+
+struct VertSpec
+{
+  const char** attrib_names;
+  int* attrib_locations;
+  size_t num_attributes;
+};
 
 ////////////////////////////////////////////////////////////////////////////////
 // Texture
@@ -37,17 +52,19 @@ struct Sprite
 };
 
 void create_sprite(Sprite* sprite, glm::vec2 texture_offset, glm::vec2 sprite_dims, Texture* texture, Color color = { 1.0f, 1.0f, 1.0f });
-bool sprite_is_valid(Sprite* sprite);
-void color_sprite(Sprite* sprite, glm::vec4 color);
 
 ////////////////////////////////////////////////////////////////////////////////
-// Vertex Specification
+// Assets
 ////////////////////////////////////////////////////////////////////////////////
 
-struct VertSpec
-{
-  const char** attrib_names;
-  int* attrib_locations;
-  size_t num_attributes;
-};
+// Textures
+GameError load_image_as_texture(Texture* texture, const char* pathname);
+bool texture_is_valid(Texture* texture);
+void destroy_texture(Texture* texture);
 
+// Shaders
+ShaderID load_shader_source(const char* pathname, GLenum shader_type);
+void destroy_shader(ShaderID shader);
+ShaderProgramID link_shader_program(ShaderID* shaders, size_t num_shaders, const VertSpec& vertex_spec);
+void destroy_program(ShaderProgramID program);
+GameError detach_shaders(ShaderProgramID program, ShaderID* shaders, size_t num_shaders);

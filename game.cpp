@@ -1,4 +1,5 @@
 #include "game.h"
+#include "render_globals.h"
 
 void Game::init(WindowParams* window_params,
                 const size_t main_memory_size, const size_t frame_memory_size)
@@ -9,12 +10,19 @@ void Game::init(WindowParams* window_params,
   fatal_game_error(create_buffer(&frame_memory, malloc(frame_memory_size), frame_memory_size));
 
   quit = false;
+
+  window = *window_params;
+
+  init_rendering();
 }
 
 void Game::deinit()
 {
   fatal_game_error(destroy_graphics(&graphics));
   free(main_memory.start);
+  free(frame_memory.start);
+
+  deinit_rendering();
 }
 
 void Game::run(const char* name, const size_t main_memory_size, const size_t frame_memory_size, const bool fullscreen, const int w, const int h, const int x, const int y)

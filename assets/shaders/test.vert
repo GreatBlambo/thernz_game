@@ -10,8 +10,11 @@ in mat4 model;
 out vec2 frag_texcoords;
 out vec4 sprite_color;
 
-uniform mat4 projection;
-uniform mat4 view;
+layout (std140) uniform CameraData
+{
+  mat4 projection;
+  mat4 view;
+};
 
 vec2 uv_offset;
 

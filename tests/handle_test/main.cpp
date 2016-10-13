@@ -14,6 +14,7 @@ int main(int, char**)
     Handle handle;     
     ASSERT(new_handle(&handle_array, &handle), "Exceeded handle limit\n");
     printf("index: %u, generation: %u\n", handle_get_index(handle), handle_get_generation(handle));
+    deactivate_handle(&handle_array, handle);
   }
   
   return 0;

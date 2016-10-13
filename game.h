@@ -32,7 +32,8 @@ protected:
   
   Buffer main_memory;
   FrameDataBuffer frame_memory;
-  
+
+  WindowParams window;
 private:
   void init(WindowParams* window_params, const size_t main_memory_size, const size_t frame_memory_size);
   void deinit();
