@@ -20,11 +20,15 @@ set(SOURCES rendering.cpp
             error_codes.cpp
             game.cpp
             config.cpp
-            handle.cpp
             render_globals.cpp
             tzgraphics.cpp
+            tzrendering.cpp
             tzengine.cpp
-            tzinput.cpp)
+            tzinput.cpp
+            tzhash.cpp
+            tzsort.cpp
+            tzerror_codes.cpp
+            tzrender_types.cpp)
 
 add_library(game_lib STATIC ${SOURCES})
 

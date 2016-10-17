@@ -2,6 +2,9 @@
 
 namespace tz
 {
+  namespace graphics
+  {
+    
   GameError init_graphics();
   void deinit_graphics();
   
@@ -10,4 +13,8 @@ namespace tz
   void set_window_fullscreen();
   void set_window_fullscreen_windowed();
   void set_window_windowed();
+
+  void swap_backbuffer();
+  
+  }
 }

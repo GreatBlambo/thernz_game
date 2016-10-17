@@ -4,16 +4,20 @@
 #include <string.h>
 #include <atomic>
 
-#include "error_codes.h"
-#define DEFAULT_ALIGN 16
+#include "tzerror_codes.h"
 
-#define KILOBYTE(x) 1024u * x
-#define MEGABYTE(x) 1024u * KILOBYTE(x)
-#define GIGABYTE(x) 1024u * MEGABYTE(x)
+namespace tz
+{
+  
+#define TZ_DEFAULT_ALIGN 16
 
-#define ARRAY_SIZE(x) sizeof(x)/sizeof(*x)
+#define TZ_KILOBYTE(x) 1024u * x
+#define TZ_MEGABYTE(x) 1024u * TZ_KILOBYTE(x)
+#define TZ_GIGABYTE(x) 1024u * TZ_MEGABYTE(x)
 
-#define BIT_MASK(bits) ((1ull << bits) - 1)
+#define TZ_ARRAY_SIZE(x) sizeof(x)/sizeof(*x)
+
+#define TZ_BIT_MASK(bits) ((1ull << bits) - 1)
 
 ////////////////////////////////////////////////////////////////////////////////
 // Types
@@ -25,7 +29,7 @@ typedef uint8_t byte;
 // Mem utils
 ////////////////////////////////////////////////////////////////////////////////
 
-inline void* align_forward(void* ptr, size_t align = DEFAULT_ALIGN)
+inline void* align_forward(void* ptr, size_t align = TZ_DEFAULT_ALIGN)
 {
   return (void*) ((uintptr_t(ptr) + align - 1) & ~(align - 1));
 }
@@ -54,7 +58,7 @@ GameError create_buffer(GenericBuffer<OffsetType>* buffer, void* data, size_t si
 }
 
 template <typename OffsetType>
-void* push_size(GenericBuffer<OffsetType>* buffer, size_t size, size_t align = DEFAULT_ALIGN)
+void* push_size(GenericBuffer<OffsetType>* buffer, size_t size, size_t align = TZ_DEFAULT_ALIGN)
 {
   if (!buffer)
   {
@@ -66,27 +70,30 @@ void* push_size(GenericBuffer<OffsetType>* buffer, size_t size, size_t align = D
     return result;
 
   size_t new_offset = ((byte*) result - (byte*) buffer->start) + size;
-  if (new_offset > buffer->size)
+  printf("new_offset = %u, buffer size = %u\n", new_offset, buffer->size);
+  printf("%d\n", buffer->size < new_offset);
+  if (buffer->size < new_offset)
   {
     return NULL;
   }
 
   buffer->offset = new_offset;
+  
   return result;
 }
 
 template <typename OffsetType, typename OtherOffsetType>
-inline GameError push_buffer(GenericBuffer<OffsetType>* source, GenericBuffer<OtherOffsetType>* result, size_t size, size_t align = DEFAULT_ALIGN)
+inline GameError push_buffer(GenericBuffer<OffsetType>* source, GenericBuffer<OtherOffsetType>* result, size_t size, size_t align = TZ_DEFAULT_ALIGN)
 {
   return create_buffer(result, push_size(source, size, align), size);
 }
 
-#define zero_buffer(buffer) memset(buffer->start, 0, buffer->size)
-#define push_array(T, buffer, length) (T*) push_size(buffer, sizeof(T) * length)
-#define zero_array(array, length) memset(array, 0, sizeof(*array) * length)
-#define push_struct(T, buffer) push_array(T, buffer, 1)
-#define push_new(T, buffer, ...) (T*) new (push_size(sizeof(T))) T(__VA_ARGS__)
-#define delete_pushed(T, ptr) ptr->T()
+#define TZ_zero_buffer(buffer) memset(buffer->start, 0, buffer->size)
+#define TZ_push_array(T, buffer, length) (T*) push_size(buffer, sizeof(T) * length, alignof(T))
+#define TZ_zero_array(array, length) memset(array, 0, sizeof(*array) * length)
+#define TZ_push_struct(T, buffer) push_array(T, buffer, 1)
+#define TZ_push_new(T, buffer, ...) new (push_size(buffer, sizeof(T), alignof(T))) T(__VA_ARGS__)
+#define TZ_delete_pushed(T, ptr) ptr->~T()
 
 template <typename OffsetType>
 inline size_t buffer_get_remaining(const GenericBuffer<OffsetType>* buffer)
@@ -124,8 +131,10 @@ struct Array
 template <typename T>
 void push_array_struct(Array<T>* array, Buffer* buffer, size_t capacity)
 {
-  array->start = push_array(T, buffer, capacity);
+  array->start = TZ_push_array(T, buffer, capacity);
   array->capacity = capacity;
   array->size = 0;
   return array;
+}
+
 }

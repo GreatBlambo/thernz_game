@@ -10,3 +10,6 @@
 [submodule "thirdparty/tinyobjloader-c"]
 	path = thirdparty/tinyobjloader-c
 	url = https://github.com/syoyo/tinyobjloader-c.git
+[submodule "thirdparty/bitsquid-foundation-git"]
+	path = thirdparty/bitsquid-foundation-git
+	url = https://github.com/Geenz/bitsquid-foundation-git.git

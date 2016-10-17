@@ -1,8 +1,9 @@
 * Tasks
-** TODO Finish off sprite rendering and the renderer.
-   - Look into sprite batch caching sprite info by keeping track of some "resource ID"
-** TODO Materials and resources system that passes out indicies
-** TODO Clean up the code a bit
+** TODO Replace std::sort with some radix sort for renderer
+** TODO Finish command buffer
+** TODO Define command stuff wrt rendering
+** TODO Uniform databases and uniform handles
+** TODO Materials and resources system that passes out handles
 ** TODO Multithreaded rendering
    - Thread local queues that build up commands
    - Synchronized submit function that accepts queues and fills in a master linked list

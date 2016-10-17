@@ -2,31 +2,33 @@
 
 int main(int, char**)
 {
-  tz::init(GIGABYTE(1), GIGABYTE(1), tz::GRAPHICS);
-  tz::set_window_name("test");
-  tz::set_window_size(800, 600);
+  tz::init(TZ_GIGABYTE(1), TZ_GIGABYTE(1), tz::GRAPHICS | tz::RENDERING);
+  tz::graphics::set_window_name("test");
+  tz::graphics::set_window_size(800, 600);
 
   bool quit = false;
 
   tz::InputEvent input_event;
   while(!quit)
   {
-    tz::poll_events(input_event);
-    switch(input_event.type)
+    while (tz::poll_events(input_event))
     {
-    case tz::InputEventType::app_close:
-      quit = true;
-      break;
-    case tz::InputEventType::key:
-      switch (input_event.data.key_event.key)
+      switch(input_event.type)
       {
-      case tz::KeyPress::escape:
+      case tz::InputEventType::app_close:
         quit = true;
         break;
+      case tz::InputEventType::key:
+        switch (input_event.data.key_event.key)
+        {
+        case tz::KeyPress::escape:
+          quit = true;
+          break;
+        }
+        break;
       }
-      break;
     }
-    tz::flush_frame();
+    tz::frame();
   }
   
   tz::deinit();

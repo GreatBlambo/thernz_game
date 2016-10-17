@@ -1,62 +1,81 @@
-#include "memory.h"
-#include "error_codes.h"
+#include "tzmemory.h"
+#include "tzerror_codes.h"
 #include "tzengine.h"
 #include "tzgraphics.h"
+#include "tzrendering.h"
 
 namespace tz
 {
-  static Buffer g_full_memory;
-  static Buffer g_main_memory;
-  static FrameDataBuffer g_frame_memory;
-  
-  static SystemFlags g_flags;
+GameState g_game_state;
 
-  static void init_systems(SystemFlags flags)
+static void init_systems(int flags)
+{
+  if (flags & GRAPHICS)
   {
-    if (flags & GRAPHICS)
-    {
-      init_graphics();
-    }
+    graphics::init_graphics();
   }
+  if (flags & RENDERING)
+  {
+    renderer::init_rendering();
+  }
+}
 
-  static void deinit_systems(SystemFlags flags)
+static void deinit_systems(int flags)
+{
+  if (flags & GRAPHICS)
   {
-    if (flags & GRAPHICS)
-    {
-      deinit_graphics();
-    }
+    graphics::deinit_graphics();
   }
-  
-  void init(const size_t main_memory_size, const size_t frame_memory_size, SystemFlags flags)
+  if (flags & RENDERING)
   {
-    size_t total_size = main_memory_size + frame_memory_size;
-    fatal_game_error(create_buffer(&g_full_memory, malloc(total_size), total_size));
+    renderer::deinit_rendering();
+  }
+}
+  
+void init(const size_t main_memory_size, const size_t frame_memory_size, int flags)
+{
+  size_t total_size = main_memory_size + frame_memory_size;
+  fatal_game_error(create_buffer(&g_game_state.full_memory, malloc(total_size), total_size));
     
-    fatal_game_error(push_buffer(&g_full_memory, &g_main_memory, main_memory_size));
-    fatal_game_error(push_buffer(&g_full_memory, &g_frame_memory, frame_memory_size));
+  fatal_game_error(push_buffer(&g_game_state.full_memory, &g_game_state.main_memory, main_memory_size));
+  fatal_game_error(push_buffer(&g_game_state.full_memory, &g_game_state.frame_memory, frame_memory_size));
 
-    g_flags = flags;
-    init_systems(g_flags);
-  }
+  g_game_state.flags = flags;
+  init_systems(g_game_state.flags);
+}
 
-  void deinit()
+void deinit()
+{
+  deinit_systems(g_game_state.flags);
+  free(g_game_state.full_memory.start);
+}
+
+void flush_frame()
+{
+  buffer_reset(&g_game_state.frame_memory);
+}
+
+void frame()
+{
+  if (g_game_state.flags & GRAPHICS)
   {
-    deinit_systems(g_flags);
-    free(g_full_memory.start);
+    graphics::swap_backbuffer();
   }
+  if (g_game_state.flags & RENDERING)
+  {
+    renderer::push_frame();
+  }  
+  flush_frame();
+}
   
-  inline void* allocate(size_t size, size_t align)
-  {
-    return push_size(&g_main_memory, size, align);
-  }
+inline void* allocate(size_t size, size_t align)
+{
+  return push_size(&g_game_state.main_memory, size, align);
+}
   
-  inline void* frame_allocate(size_t size, size_t align)
-  {
-    return push_size(&g_frame_memory, size, align);
-  }
+inline void* frame_allocate(size_t size, size_t align)
+{
+  return push_size(&g_game_state.frame_memory, size, align);
+}
 
-  void flush_frame()
-  {
-    buffer_reset(&g_frame_memory);
-  }
 }

@@ -2,7 +2,7 @@
 #include <config.h>
 
 struct ThernzGame : public Game
-{
+{  
   void on_game_start();
   void on_game_update(float dt);
   void on_game_finish();

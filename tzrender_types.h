@@ -3,8 +3,11 @@
 #include <GL/glew.h>
 #include <glm/glm.hpp>
 
-#include "error_codes.h"
-#include "memory.h"
+#include "tzerror_codes.h"
+#include "tzmemory.h"
+
+namespace tz
+{
 
 typedef glm::vec3 Color;
 
@@ -19,8 +22,20 @@ typedef GLuint FrameBufferID;
 typedef GLuint ShaderID;
 typedef GLuint ShaderProgramID;
 
-#define PI 3.1415926535
-#define DEGREES_TO_RADS(x) x * PI/180
+enum DrawType : GLenum
+{
+  POINTS = GL_POINTS,                       
+  LINES = GL_LINES,                          
+  LINE_LOOP = GL_LINE_LOOP,
+  LINE_STRIP = GL_LINE_STRIP,
+  TRIANGLES = GL_TRIANGLES,
+  TRIANGLE_STRIP = GL_TRIANGLE_STRIP,                 
+  TRIANGLE_FAN = GL_TRIANGLE_FAN
+};
+
+
+#define TZ_PI 3.1415926535
+#define TZ_DEGREES_TO_RADS(x) x * PI/180
 
 ////////////////////////////////////////////////////////////////////////////////
 // Vertex Specification
@@ -70,3 +85,5 @@ void destroy_shader(ShaderID shader);
 ShaderProgramID link_shader_program(ShaderID* shaders, size_t num_shaders, const VertSpec& vertex_spec);
 void destroy_program(ShaderProgramID program);
 GameError detach_shaders(ShaderProgramID program, ShaderID* shaders, size_t num_shaders);
+
+}
