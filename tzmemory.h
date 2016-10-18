@@ -4,6 +4,8 @@
 #include <string.h>
 #include <atomic>
 
+#include <thirdparty/bitsquid-foundation-git/memory.h>
+
 #include "tzerror_codes.h"
 
 namespace tz
@@ -38,16 +40,14 @@ inline void* align_forward(void* ptr, size_t align = TZ_DEFAULT_ALIGN)
 // Buffers
 ////////////////////////////////////////////////////////////////////////////////
 
-template <typename OffsetType>
-struct GenericBuffer
+struct Buffer
 {
   void* start;
   size_t size;
-  OffsetType offset;
+  size_t offset;
 };
 
-template <typename OffsetType>
-GameError create_buffer(GenericBuffer<OffsetType>* buffer, void* data, size_t size)
+inline GameError create_buffer(Buffer* buffer, void* data, size_t size)
 {
   if (!buffer || !data)
     return ERROR_NULL_PARAM;
@@ -57,8 +57,24 @@ GameError create_buffer(GenericBuffer<OffsetType>* buffer, void* data, size_t si
   return NO_ERROR;
 }
 
-template <typename OffsetType>
-void* push_size(GenericBuffer<OffsetType>* buffer, size_t size, size_t align = TZ_DEFAULT_ALIGN)
+inline size_t buffer_get_remaining(const Buffer* buffer)
+{
+  return buffer->size - buffer->offset;
+}
+
+
+inline void* buffer_get_offset_pointer(const Buffer* buffer)
+{
+  return (void*) ((byte*) buffer->start + buffer->offset);
+}
+
+
+inline void buffer_reset(Buffer* buffer) 
+{
+  buffer->offset = 0;
+}
+
+inline void* push_size(Buffer* buffer, size_t size, size_t align = TZ_DEFAULT_ALIGN)
 {
   if (!buffer)
   {
@@ -70,8 +86,6 @@ void* push_size(GenericBuffer<OffsetType>* buffer, size_t size, size_t align = T
     return result;
 
   size_t new_offset = ((byte*) result - (byte*) buffer->start) + size;
-  printf("new_offset = %u, buffer size = %u\n", new_offset, buffer->size);
-  printf("%d\n", buffer->size < new_offset);
   if (buffer->size < new_offset)
   {
     return NULL;
@@ -82,8 +96,7 @@ void* push_size(GenericBuffer<OffsetType>* buffer, size_t size, size_t align = T
   return result;
 }
 
-template <typename OffsetType, typename OtherOffsetType>
-inline GameError push_buffer(GenericBuffer<OffsetType>* source, GenericBuffer<OtherOffsetType>* result, size_t size, size_t align = TZ_DEFAULT_ALIGN)
+inline GameError push_buffer(Buffer* source, Buffer* result, size_t size, size_t align = TZ_DEFAULT_ALIGN)
 {
   return create_buffer(result, push_size(source, size, align), size);
 }
@@ -91,50 +104,49 @@ inline GameError push_buffer(GenericBuffer<OffsetType>* source, GenericBuffer<Ot
 #define TZ_zero_buffer(buffer) memset(buffer->start, 0, buffer->size)
 #define TZ_push_array(T, buffer, length) (T*) push_size(buffer, sizeof(T) * length, alignof(T))
 #define TZ_zero_array(array, length) memset(array, 0, sizeof(*array) * length)
-#define TZ_push_struct(T, buffer) push_array(T, buffer, 1)
-#define TZ_push_new(T, buffer, ...) new (push_size(buffer, sizeof(T), alignof(T))) T(__VA_ARGS__)
+#define TZ_push_struct(T, buffer) TZ_push_array(T, buffer, 1)
+#define TZ_push_new(T, buffer, ...) (new (push_size(buffer, sizeof(T), alignof(T))) T(__VA_ARGS__))
 #define TZ_delete_pushed(T, ptr) ptr->~T()
 
-template <typename OffsetType>
-inline size_t buffer_get_remaining(const GenericBuffer<OffsetType>* buffer)
-{
-  return buffer->size - buffer->offset;
-}
-
-template <typename OffsetType>
-inline void* buffer_get_offset_pointer(const GenericBuffer<OffsetType>* buffer)
-{
-  return (void*) ((byte*) buffer->start + buffer->offset);
-}
-
-template <typename OffsetType>
-inline void buffer_reset(GenericBuffer<OffsetType>* buffer) 
-{
-  buffer->offset = 0;
-}
-
-typedef GenericBuffer<size_t> Buffer;
-typedef GenericBuffer<std::atomic_size_t> FrameDataBuffer;
-
 ////////////////////////////////////////////////////////////////////////////////
-// Arrays
+// Linear Allocator
+// Does a simple pointer bump on a buffer
 ////////////////////////////////////////////////////////////////////////////////
 
-template <typename T>
-struct Array
+class LinearAllocator : public foundation::Allocator
 {
-  T* start;
-  size_t size;
-  size_t capacity;
+public:
+  LinearAllocator(void* data, size_t size);
+
+  void* allocate(uint32_t size, uint32_t align = foundation::Allocator::DEFAULT_ALIGN);
+
+  void deallocate(void* p);
+
+  uint32_t allocated_size(void* p);
+
+  uint32_t total_allocated();
+  
+private:
+  Buffer m_buffer;
 };
 
-template <typename T>
-void push_array_struct(Array<T>* array, Buffer* buffer, size_t capacity)
+class AtomicLinearAllocator : public foundation::Allocator
 {
-  array->start = TZ_push_array(T, buffer, capacity);
-  array->capacity = capacity;
-  array->size = 0;
-  return array;
-}
+public:
+  AtomicLinearAllocator(void* data, size_t size);
+
+  void* allocate(uint32_t size, uint32_t align = foundation::Allocator::DEFAULT_ALIGN);
+
+  void deallocate(void* p);
+
+  uint32_t allocated_size(void* p);
+
+  uint32_t total_allocated();
+  
+private:
+  std::atomic_size_t m_offset;
+  size_t m_size;
+  byte* m_data;
+};
 
 }

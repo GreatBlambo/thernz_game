@@ -17,16 +17,16 @@ namespace tz
   void deinit();
 
   // allocates on the permanent memory buffer
-  inline void* allocate(size_t size, size_t align = TZ_DEFAULT_ALIGN);
+  void* allocate(size_t size, size_t align = TZ_DEFAULT_ALIGN);
   
   // allocates on the per-frame memory buffer that is cleared each frame
-  inline void* frame_allocate(size_t size, size_t align = TZ_DEFAULT_ALIGN);
+  void* frame_allocate(size_t size, size_t align = TZ_DEFAULT_ALIGN);
 
   struct GameState
   {
     Buffer full_memory;
     Buffer main_memory;
-    FrameDataBuffer frame_memory;
+    Buffer frame_memory;
   
     int flags;
   };

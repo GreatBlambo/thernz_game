@@ -1,4 +1,4 @@
-#include "render_types.h"
+#include "tzrender_types.h"
 
 #include <GL/glew.h>
 #include <SDL2/SDL.h>

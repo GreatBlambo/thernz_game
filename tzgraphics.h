@@ -2,8 +2,8 @@
 
 namespace tz
 {
-  namespace graphics
-  {
+namespace graphics
+{
     
   GameError init_graphics();
   void deinit_graphics();
@@ -16,5 +16,5 @@ namespace tz
 
   void swap_backbuffer();
   
-  }
+}
 }

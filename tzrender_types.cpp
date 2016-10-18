@@ -6,12 +6,12 @@
 namespace tz
 {
 
-void create_sprite(Sprite* sprite, glm::vec2 texture_offset, glm::vec2 sprite_dims, Texture* texture, Color color)
+void create_sprite(Sprite* sprite, glm::vec2 texture_offset, glm::vec2 tex_dims, glm::vec2 sprite_dims, Texture* texture, Color color)
 {
-  sprite->sprite_uv.x = texture_offset.x / texture->w;
-  sprite->sprite_uv.y = texture_offset.y / texture->h;
-  sprite->sprite_uv.w = sprite_dims.x / texture->w;
-  sprite->sprite_uv.z = sprite_dims.y / texture->h;
+  sprite->sprite_uv.x = texture_offset.x / tex_dims.x;
+  sprite->sprite_uv.y = texture_offset.y / tex_dims.y;
+  sprite->sprite_uv.w = sprite_dims.x / tex_dims.x;
+  sprite->sprite_uv.z = sprite_dims.y / tex_dims.y;
   sprite->color = glm::vec4(color, 1.0);
 }
 
@@ -21,7 +21,7 @@ void create_sprite(Sprite* sprite, glm::vec2 texture_offset, glm::vec2 sprite_di
 
 // Textures
 
-GameError load_image_as_texture(Texture* texture, const char* pathname)
+GameError load_image_as_texture(int* width, int* height, Texture* texture, const char* pathname)
 {
   //Load image at specified path
   SDL_Surface* loaded_surface = IMG_Load(pathname);
@@ -47,18 +47,13 @@ GameError load_image_as_texture(Texture* texture, const char* pathname)
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
   texture->texture_id = texture_id;
-  texture->w = loaded_surface->w;
-  texture->h = loaded_surface->h;
+  *width = loaded_surface->w;
+  *height = loaded_surface->h;
   
   //Clean up surface
   SDL_FreeSurface(loaded_surface);
   
   return NO_ERROR;
-}
-
-bool texture_is_valid(Texture* texture)
-{
-  return texture->texture_id > 0;
 }
 
 void destroy_texture(Texture* texture)

@@ -12,29 +12,23 @@ endif()
 
 # Source files
 
-set(SOURCES rendering.cpp
-            render_functions.cpp
-	    render_types.cpp
-            sprite_batch.cpp
-            graphics.cpp
-            error_codes.cpp
-            game.cpp
-            config.cpp
-            render_globals.cpp
-            tzgraphics.cpp
+set(SOURCES tzgraphics_gl.cpp
+            tzbackend_gl.cpp
             tzrendering.cpp
             tzengine.cpp
             tzinput.cpp
             tzhash.cpp
             tzsort.cpp
             tzerror_codes.cpp
-            tzrender_types.cpp)
+            tzrender_types.cpp
+            tzgame.cpp
+            tzmemory.cpp)
 
 add_library(game_lib STATIC ${SOURCES})
 
 include_directories("./")
-add_executable(thernz_game main.cpp)
-target_compile_features(thernz_game PRIVATE cxx_range_for)
+#add_executable(thernz_game main.cpp)
+#target_compile_features(thernz_game PRIVATE cxx_range_for)
 
 add_definitions(-DGLEW_STATIC)
 
@@ -85,8 +79,9 @@ set(LIBS game_lib
          sdl2_image
          sdl2_main
          header_only_libs
-         tinyobjloader)
+         tinyobjloader
+         bitsquid_foundation)
 
 add_subdirectory(tests)
 
-target_link_libraries(thernz_game ${LIBS})
+#target_link_libraries(thernz_game ${LIBS})

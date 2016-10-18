@@ -1,6 +1,6 @@
 #pragma once
 
-#include "memory.h"
+#include "tzmemory.h"
 
 namespace tz
 {

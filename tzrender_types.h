@@ -8,7 +8,7 @@
 
 namespace tz
 {
-
+// GL stuff
 typedef glm::vec3 Color;
 
 typedef GLuint TextureID;
@@ -33,6 +33,27 @@ enum DrawType : GLenum
   TRIANGLE_FAN = GL_TRIANGLE_FAN
 };
 
+enum TextureType : GLenum
+{
+  TEXTURE_1D = GL_TEXTURE_1D,
+  TEXTURE_2D = GL_TEXTURE_2D,
+  TEXTURE_3D = GL_TEXTURE_3D,
+  TEXTURE_1D_ARRAY = GL_TEXTURE_1D_ARRAY,
+  TEXTURE_2D_ARRAY = GL_TEXTURE_2D_ARRAY,
+  TEXTURE_RECTANGLE = GL_TEXTURE_RECTANGLE,
+  TEXTURE_CUBE_MAP = GL_TEXTURE_CUBE_MAP,
+  TEXTURE_CUBE_MAP_ARRAY = GL_TEXTURE_CUBE_MAP_ARRAY,
+  TEXTURE_BUFFER = GL_TEXTURE_BUFFER,
+  TEXTURE_2D_MULTISAMPLE = GL_TEXTURE_2D_MULTISAMPLE,
+  TEXTURE_2D_MULTISAMPLE_ARRAY = GL_TEXTURE_2D_MULTISAMPLE_ARRAY
+};
+
+enum DataType : GLenum
+{
+  UNSIGNED_BYTE = GL_UNSIGNED_BYTE,
+  UNSIGNED_SHORT = GL_UNSIGNED_SHORT,
+  UNSIGNED_INT = GL_UNSIGNED_INT
+};
 
 #define TZ_PI 3.1415926535
 #define TZ_DEGREES_TO_RADS(x) x * PI/180
@@ -55,7 +76,7 @@ struct VertSpec
 struct Texture
 {
   TextureID texture_id;
-  float w, h;
+  TextureType type;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -75,8 +96,7 @@ void create_sprite(Sprite* sprite, glm::vec2 texture_offset, glm::vec2 sprite_di
 ////////////////////////////////////////////////////////////////////////////////
 
 // Textures
-GameError load_image_as_texture(Texture* texture, const char* pathname);
-bool texture_is_valid(Texture* texture);
+GameError load_image_as_texture(int* width, int* height, Texture* texture, const char* pathname);
 void destroy_texture(Texture* texture);
 
 // Shaders

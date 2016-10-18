@@ -68,12 +68,12 @@ void frame()
   flush_frame();
 }
   
-inline void* allocate(size_t size, size_t align)
+void* allocate(size_t size, size_t align)
 {
   return push_size(&g_game_state.main_memory, size, align);
 }
   
-inline void* frame_allocate(size_t size, size_t align)
+void* frame_allocate(size_t size, size_t align)
 {
   return push_size(&g_game_state.frame_memory, size, align);
 }

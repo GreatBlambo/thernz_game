@@ -15,7 +15,7 @@ template <typename T>
       return key < other.key;
     }
     T key;
-    size_t index;
+    void* data;
   };
 }
 

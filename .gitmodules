@@ -13,3 +13,6 @@
 [submodule "thirdparty/bitsquid-foundation-git"]
 	path = thirdparty/bitsquid-foundation-git
 	url = https://github.com/Geenz/bitsquid-foundation-git.git
+[submodule "thirdparty/imgui"]
+	path = thirdparty/imgui
+	url = https://github.com/ocornut/imgui.git
