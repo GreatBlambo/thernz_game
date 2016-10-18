@@ -62,11 +62,44 @@ int main(int, char**)
   graphics::set_window_name("test");
   graphics::set_window_size(800, 600);
   
-  LinearAllocator alloc(allocate(TZ_CONFIG_COMMAND_BUFFER_MAX_SIZE), TZ_CONFIG_COMMAND_BUFFER_MAX_SIZE); //Temp
-  renderer::CommandBuffer<uint64_t>* command_buffer = TZ_push_new(renderer::CommandBuffer<uint64_t>, &g_game_state.main_memory, alloc, TZ_CONFIG_COMMAND_BUFFER_MAX_SIZE, TZ_CONFIG_MAX_DRAW_CALLS);
+  LinearAllocator alloc(allocate(TZ_CONFIG_COMMAND_BUFFER_MAX_SIZE),
+                        TZ_CONFIG_COMMAND_BUFFER_MAX_SIZE); //Temp
+  renderer::CommandBuffer<uint64_t>* command_buffer = TZ_push_new(renderer::CommandBuffer<uint64_t>,
+                                                                  &g_game_state.main_memory,
+                                                                  alloc,
+                                                                  TZ_CONFIG_COMMAND_BUFFER_MAX_SIZE,
+                                                                  TZ_CONFIG_MAX_DRAW_CALLS);
+
+  
+  ShaderID vert, frag;
+  ShaderProgramID program;
+  VertexArrayID vao;
+  VertexBufferID vbo;
+  IndexArrayID ibo;
+
+  VertSpec vert_spec;
+  
+  const char* names[]= {
+    "position",
+    "color"
+  };
+  vert_spec.attrib_names = names;
+  int locations[] = {
+    0,
+    1
+  };
+  
+  vert_spec.attrib_locations = locations;
+  vert_spec.num_attributes = 2;
+
+  vert = load_shader_source("assets/shaders/test.vert", VERTEX_SHADER);
+  frag = load_shader_source("assets/shaders/test.frag", FRAGMENT_SHADER);
+  ShaderID shaders[] = { vert, frag };
+  program = link_shader_program(shaders, 2, vert_spec);
+
+  
   
   bool quit = false;
-
   InputEvent input_event;
   while(!quit)
   {

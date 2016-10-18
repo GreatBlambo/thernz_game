@@ -64,7 +64,7 @@ void destroy_texture(Texture* texture)
 // Shaders
 #define ERROR_BUFF_SIZE 512
 
-ShaderID load_shader_source(const char* pathname, GLenum shader_type)
+ShaderID load_shader_source(const char* pathname, ShaderType shader_type)
 {
   ShaderID result;
   FILE* file = NULL;

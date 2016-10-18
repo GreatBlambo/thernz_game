@@ -6,7 +6,55 @@
 namespace tz
 {
 namespace renderer
-{ 
+{
+
+static void bind_material(Material& material)
+{
+  static Material s_material = {0};
+  
+  if (s_material.shader != material.shader)
+  {
+    s_material.shader = material.shader;
+    glUseProgram(s_material.shader);
+  }
+  
+  for (size_t i = 0; i < material.num_textures; i++)
+  {
+    if (s_material.textures[i].texture_id != material.textures[i].texture_id)
+    {
+      s_material.textures[i] = material.textures[i];
+      glActiveTexture(GL_TEXTURE0 + i);
+      glBindTexture(s_material.textures[i].texture_id, s_material.textures[i].type);
+    }
+  }
+};
+
+static void bind_vao(VertexArrayID vao)
+{
+  static VertexArrayID s_vao = 0;
+  if (s_vao != vao)
+  {
+    s_vao = vao;
+    glBindVertexArray(s_vao);
+  }
+}
+
+static size_t get_ogl_type_size(DataType type)
+{
+  switch(type)
+  {
+   case (UNSIGNED_BYTE):
+     return sizeof(GLubyte);
+     break;
+   case (UNSIGNED_SHORT):
+     return sizeof(GLushort);
+     break;
+   case (UNSIGNED_INT):
+     return sizeof(GLuint);
+     break;
+  };
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 // Backend commands
 ////////////////////////////////////////////////////////////////////////////////
@@ -35,38 +83,24 @@ TZ_BACKEND_DISPATCH_IMPL(UploadNUniforms)
   }
 }
 
-TZ_BACKEND_DISPATCH_IMPL(BindMaterial)
-{
-  static BindMaterial s_material = {0};
-  BindMaterial* material_data = (BindMaterial*) data;
-  
-  if (s_material.shader != material_data->shader)
-  {
-    s_material.shader = material_data->shader;
-    glUseProgram(s_material.shader);
-  }
-  
-  for (size_t i = 0; i < material_data->num_textures; i++)
-  {
-    if (s_material.textures[i].texture_id != material_data->textures[i].texture_id)
-    {
-      s_material.textures[i] = material_data->textures[i];
-      glActiveTexture(GL_TEXTURE0 + i);
-      glBindTexture(s_material.textures[i].texture_id, s_material.textures[i].type);
-    }
-  }
-}
-  
 TZ_BACKEND_DISPATCH_IMPL(DrawIndexed)
 {
   DrawIndexed* command = (DrawIndexed*) data;
-  glDrawElements(command->draw_type, command->num_indices, command->indices_type, (const void*) command->start_index);
+
+  bind_vao(command->vao);
+  bind_material(command->material);
+  
+  glDrawElements(command->draw_type, command->num_indices, command->indices_type, (const void*) (get_ogl_type_size(command->indices_type) * command->start_index));
 }
   
 TZ_BACKEND_DISPATCH_IMPL(DrawIndexedInstanced)
 {
   DrawIndexedInstanced* command = (DrawIndexedInstanced*) data;
-  glDrawElementsInstanced(command->draw_type, command->num_indices, command->indices_type, (const void*) command->start_index, command->instances);
+
+  bind_vao(command->vao);
+  bind_material(command->material);
+  
+  glDrawElementsInstanced(command->draw_type, command->num_indices, command->indices_type, (const void*) (get_ogl_type_size(command->indices_type) * command->start_index), command->instances);
 }
   
 }

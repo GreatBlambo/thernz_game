@@ -5,6 +5,7 @@
 
 #include "tzerror_codes.h"
 #include "tzmemory.h"
+#include "tzconfig.h"
 
 namespace tz
 {
@@ -48,6 +49,16 @@ enum TextureType : GLenum
   TEXTURE_2D_MULTISAMPLE_ARRAY = GL_TEXTURE_2D_MULTISAMPLE_ARRAY
 };
 
+enum ShaderType : GLenum
+{
+  VERTEX_SHADER = GL_VERTEX_SHADER,
+  TESS_CONTROL_SHADER =  GL_TESS_CONTROL_SHADER,
+  TESS_EVALUATION_SHADER = GL_TESS_EVALUATION_SHADER,
+  GEOMETRY_SHADER = GL_GEOMETRY_SHADER,
+  FRAGMENT_SHADER = GL_FRAGMENT_SHADER,
+  COMPUTE_SHADER = GL_COMPUTE_SHADER
+};
+
 enum DataType : GLenum
 {
   UNSIGNED_BYTE = GL_UNSIGNED_BYTE,
@@ -80,6 +91,17 @@ struct Texture
 };
 
 ////////////////////////////////////////////////////////////////////////////////
+// Material
+////////////////////////////////////////////////////////////////////////////////
+
+struct Material
+{
+  ShaderProgramID shader;
+  Texture textures[TZ_CONFIG_MAX_NUM_SAMPLERS];
+  size_t num_textures;
+};
+ 
+////////////////////////////////////////////////////////////////////////////////
 // Sprite
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -100,7 +122,7 @@ GameError load_image_as_texture(int* width, int* height, Texture* texture, const
 void destroy_texture(Texture* texture);
 
 // Shaders
-ShaderID load_shader_source(const char* pathname, GLenum shader_type);
+ShaderID load_shader_source(const char* pathname, ShaderType shader_type);
 void destroy_shader(ShaderID shader);
 ShaderProgramID link_shader_program(ShaderID* shaders, size_t num_shaders, const VertSpec& vertex_spec);
 void destroy_program(ShaderProgramID program);

@@ -91,7 +91,7 @@ namespace renderer
     DataType* push_command(Key key, size_t aux_size)
     {
       if (m_num_calls > m_reserved_calls) return NULL;
-      Command* new_command = allocate_command(key, aux_size);
+      Command* new_command = allocate_command(aux_size);
       
       // Add Command
       m_commands[m_num_calls] = new_command;
@@ -106,10 +106,10 @@ namespace renderer
     }
 
     template <typename DataType1, typename DataType2>
-    DataType2* chain_command(Key key, size_t aux_size, DataType1* parent)
+    DataType2* chain_command(size_t aux_size, DataType1* parent)
     {
       Command* previous_command = Command::get_command((void*) parent);
-      DataType2* new_entry = allocate_command<DataType2>(key, aux_size);
+      DataType2* new_entry = allocate_command<DataType2>(aux_size);
 
       previous_command->next_command = Command::get_command((void*) new_entry);
 
@@ -136,7 +136,7 @@ namespace renderer
     
   private:      
     template <typename DataType>
-    Command* allocate_command(Key key, size_t aux_size)
+    Command* allocate_command(size_t aux_size)
     {
       Command* new_command = m_data_allocator.allocate(sizeof(Command) + sizeof(DataType) + aux_size);
       DataType* data = (DataType*) (new_command + 1);

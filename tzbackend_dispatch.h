@@ -31,19 +31,6 @@ namespace renderer
       MAT4
     } type;    
   };
-
-  struct UploadBufferData
-  {
-  };
-
-  struct BindMaterial
-  {
-    TZ_BACKEND_DISPATCH_DECL
-    
-    ShaderProgramID shader;
-    Texture textures[TZ_CONFIG_MAX_NUM_SAMPLERS];
-    size_t num_textures;
-  };
   
   struct DrawIndexed
   {
@@ -51,20 +38,27 @@ namespace renderer
     
     VertexArrayID vao;
     DrawType draw_type;
+    
     size_t start_index;
     size_t num_indices;
     DataType indices_type;
+
+    Material material;
   };
   
   struct DrawIndexedInstanced
   {
     TZ_BACKEND_DISPATCH_DECL
+    
     VertexArrayID vao;
     DrawType draw_type;
+    
     size_t start_index;
     size_t num_indices;
     size_t instances;
     DataType indices_type;
+
+    Material material;
   };
 }
 }
