@@ -97,7 +97,15 @@ int main(int, char**)
   ShaderID shaders[] = { vert, frag };
   program = link_shader_program(shaders, 2, vert_spec);
 
+  // Replace this with vao gen, buffer update/generation
+  // buffer handle + data -> renderer -> vbo
+  // vertex spec -> renderer -> vao handle
+
+  glGenVertexArrays(1, &vao);
+  glGenBuffers(1, &vbo);
+  glGenBuffers(1, &ibo);
   
+  //
   
   bool quit = false;
   InputEvent input_event;
