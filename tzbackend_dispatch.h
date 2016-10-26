@@ -5,60 +5,80 @@
 
 namespace tz
 {
-namespace renderer
-{
-  ////////////////////////////////////////////////////////////////////////////////
-  // Backend commands
-  ////////////////////////////////////////////////////////////////////////////////
-
-#define TZ_BACKEND_DISPATCH_IMPL(command_name) void command_name::function(void* data)
-#define TZ_BACKEND_DISPATCH_DECL void function(void* data);
-
-  struct UploadNUniforms
+  namespace renderer
   {
-    TZ_BACKEND_DISPATCH_DECL
-    
-    bool transpose;
-    int location;
-    size_t n;
-    enum Type
+    struct UploadNUniforms;
+    struct DrawIndexed;  
+    struct DrawIndexedInstanced;
+
+    class IBackend
     {
-      INT,
-      FLOAT,
-      VEC2,
-      VEC3,
-      VEC4,
-      MAT4
-    } type;    
-  };
+    public:
+      virtual void dispatch(UploadNUniforms* data) = 0;
+      virtual void dispatch(DrawIndexed* data) = 0;
+      virtual void dispatch(DrawIndexedInstanced* data) = 0;
+    private:
+      // Backends hold HandleArrays full of their own kinds of data
+    };
+    
+    extern IBackend* g_backend;
+#define TZ_GLOBAL_BACKEND_CALL(type) inline static void function(void* data) { g_backend->dispatch((type*) data); }
   
-  struct DrawIndexed
-  {
-    TZ_BACKEND_DISPATCH_DECL
-    
-    VertexArrayID vao;
-    DrawType draw_type;
-    
-    size_t start_index;
-    size_t num_indices;
-    DataType indices_type;
+    ////////////////////////////////////////////////////////////////////////////////
+    // Backend commands
+    ////////////////////////////////////////////////////////////////////////////////
 
-    Material material;
-  };
+    struct UploadNUniforms
+    {
+      TZ_GLOBAL_BACKEND_CALL(UploadNUniforms)
+    
+      bool transpose;
+      int location;
+      size_t n;
+      enum Type
+	{
+	  INT,
+	  FLOAT,
+	  VEC2,
+	  VEC3,
+	  VEC4,
+	  MAT4
+	} type;    
+    };
   
-  struct DrawIndexedInstanced
-  {
-    TZ_BACKEND_DISPATCH_DECL
+    struct DrawIndexed
+    {
+      TZ_GLOBAL_BACKEND_CALL(DrawIndexed)
     
-    VertexArrayID vao;
-    DrawType draw_type;
+      VertexArrayID vao;
+      DrawType draw_type;
     
-    size_t start_index;
-    size_t num_indices;
-    size_t instances;
-    DataType indices_type;
+      size_t start_index;
+      size_t num_indices;
+      DataType indices_type;
 
-    Material material;
-  };
-}
+      Material material;
+    };
+  
+    struct DrawIndexedInstanced
+    {
+      TZ_GLOBAL_BACKEND_CALL(DrawIndexedInstanced)
+    
+      VertexArrayID vao;
+      DrawType draw_type;
+    
+      size_t start_index;
+      size_t num_indices;
+      size_t instances;
+      DataType indices_type;
+
+      Material material;
+    };
+
+    ////////////////////////////////////////////////////////////////////////////////
+    // Backend functions
+    ////////////////////////////////////////////////////////////////////////////////
+    void clear_backbuffer(GraphicsBitfield buffer_bits);
+  
+  }
 }

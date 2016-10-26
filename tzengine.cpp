@@ -57,14 +57,15 @@ void flush_frame()
 
 void frame()
 {
+  if (g_game_state.flags & RENDERING)
+  {
+    renderer::push_frame();
+  }
   if (g_game_state.flags & GRAPHICS)
   {
     graphics::swap_backbuffer();
   }
-  if (g_game_state.flags & RENDERING)
-  {
-    renderer::push_frame();
-  }  
+  
   flush_frame();
 }
   

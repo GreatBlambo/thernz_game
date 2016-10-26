@@ -6,6 +6,21 @@
 namespace tz
 {
 
+
+static const char* error_strings[] =
+{
+  "No error"
+  , "SDL"
+  , "GLEW"
+  , "OPENGL"
+  , "Null parameter"
+  , "Buffer size"
+  , "Invalid parameter"
+  , "Allocation failure"
+  , "Array size"
+};
+
+
 void check_trace_game_error(GameError err)
 {
   if (err)

@@ -1,4 +1,6 @@
 * Tasks
+** TODO Handle arrays
+** TODO Finish up slab allocator
 ** TODO Replace std::sort with some radix sort for renderer
 ** TODO Create a bitsquid allocator that works on Buffer
 ** TODO Finish command buffer

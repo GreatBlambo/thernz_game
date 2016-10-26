@@ -22,9 +22,10 @@ set(SOURCES tzgraphics_gl.cpp
             tzerror_codes.cpp
             tzrender_types.cpp
             tzgame.cpp
-            tzmemory.cpp)
+            tzmemory.cpp
+	    tzallocators.cpp)
 
-add_library(game_lib STATIC ${SOURCES})
+add_library(tz STATIC ${SOURCES})
 
 include_directories("./")
 #add_executable(thernz_game main.cpp)
@@ -37,7 +38,7 @@ file(GLOB_RECURSE ASSETS ${CMAKE_CURRENT_SOURCE_DIR}/assets/*)
 add_custom_target(assets ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/assets assets
                          SOURCES ${ASSETS})
 
-add_dependencies(game_lib assets)
+add_dependencies(tz assets)
 
 # Third party
 
@@ -72,7 +73,7 @@ find_package(glm REQUIRED STATIC)
 include_directories(${GLM_INCLUDE_DIR})
 
 # Link target libraries
-set(LIBS game_lib
+set(LIBS tz
          opengl
          glew
          sdl2

@@ -2,6 +2,7 @@
 #include <SDL2/SDL.h>
 #include <GL/glew.h>
 #include <glm/glm.hpp>
+#include <thirdparty/bitsquid-foundation-git/array.h>
 
 #include "tzerror_codes.h"
 #include "tzmemory.h"
@@ -63,8 +64,23 @@ enum DataType : GLenum
 {
   UNSIGNED_BYTE = GL_UNSIGNED_BYTE,
   UNSIGNED_SHORT = GL_UNSIGNED_SHORT,
-  UNSIGNED_INT = GL_UNSIGNED_INT
+  UNSIGNED_INT = GL_UNSIGNED_INT,
+  FLOAT = GL_FLOAT  
 };
+
+enum BufferBits : GLbitfield
+{
+  COLOR_BUFFER_BIT = GL_COLOR_BUFFER_BIT,
+  DEPTH_BUFFER_BIT = GL_DEPTH_BUFFER_BIT,
+  ACCUM_BUFFER_BIT = GL_ACCUM_BUFFER_BIT,
+  STENCIL_BUFFER_BIT = GL_STENCIL_BUFFER_BIT
+};
+
+typedef GLbitfield GraphicsBitfield;
+
+//
+
+size_t get_type_size(DataType data_type);
 
 #define TZ_PI 3.1415926535
 #define TZ_DEGREES_TO_RADS(x) x * PI/180
@@ -73,13 +89,24 @@ enum DataType : GLenum
 // Vertex Specification
 ////////////////////////////////////////////////////////////////////////////////
 
-struct VertSpec
+struct VertexAttribute
 {
-  const char** attrib_names;
-  int* attrib_locations;
-  size_t num_attributes;
+  char name[128];
+  int location;
+  int size;
+  DataType type;
+
+  size_t offset;
 };
 
+struct VertexAttribArray : foundation::Array<VertexAttribute>
+{
+  VertexAttribArray(foundation::Allocator& alloc);
+  size_t vert_size;
+};
+
+void push_attrib(VertexAttribArray& array, const char* name, int location, int size, DataType type);
+ 
 ////////////////////////////////////////////////////////////////////////////////
 // Texture
 ////////////////////////////////////////////////////////////////////////////////
@@ -124,7 +151,7 @@ void destroy_texture(Texture* texture);
 // Shaders
 ShaderID load_shader_source(const char* pathname, ShaderType shader_type);
 void destroy_shader(ShaderID shader);
-ShaderProgramID link_shader_program(ShaderID* shaders, size_t num_shaders, const VertSpec& vertex_spec);
+ShaderProgramID link_shader_program(ShaderID* shaders, size_t num_shaders, const VertexAttribArray& vertex_spec);
 void destroy_program(ShaderProgramID program);
 GameError detach_shaders(ShaderProgramID program, ShaderID* shaders, size_t num_shaders);
 

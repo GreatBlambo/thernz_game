@@ -116,7 +116,7 @@ inline GameError push_buffer(Buffer* source, Buffer* result, size_t size, size_t
 class LinearAllocator : public foundation::Allocator
 {
 public:
-  LinearAllocator(void* data, size_t size);
+  LinearAllocator(foundation::Allocator& alloc, size_t size);
 
   void* allocate(uint32_t size, uint32_t align = foundation::Allocator::DEFAULT_ALIGN);
 
@@ -125,6 +125,8 @@ public:
   uint32_t allocated_size(void* p);
 
   uint32_t total_allocated();
+
+  void reset();
   
 private:
   Buffer m_buffer;
@@ -133,7 +135,7 @@ private:
 class AtomicLinearAllocator : public foundation::Allocator
 {
 public:
-  AtomicLinearAllocator(void* data, size_t size);
+  AtomicLinearAllocator(foundation::Allocator& alloc, size_t size);
 
   void* allocate(uint32_t size, uint32_t align = foundation::Allocator::DEFAULT_ALIGN);
 
@@ -142,7 +144,9 @@ public:
   uint32_t allocated_size(void* p);
 
   uint32_t total_allocated();
-  
+
+  void reset();
+    
 private:
   std::atomic_size_t m_offset;
   size_t m_size;

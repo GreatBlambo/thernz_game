@@ -61,37 +61,22 @@ int main(int, char**)
   init(TZ_GIGABYTE(1), TZ_GIGABYTE(1), GRAPHICS | RENDERING);
   graphics::set_window_name("test");
   graphics::set_window_size(800, 600);
-  
-  LinearAllocator alloc(allocate(TZ_CONFIG_COMMAND_BUFFER_MAX_SIZE),
-                        TZ_CONFIG_COMMAND_BUFFER_MAX_SIZE); //Temp
-  renderer::CommandBuffer<uint64_t>* command_buffer = TZ_push_new(renderer::CommandBuffer<uint64_t>,
-                                                                  &g_game_state.main_memory,
-                                                                  alloc,
-                                                                  TZ_CONFIG_COMMAND_BUFFER_MAX_SIZE,
-                                                                  TZ_CONFIG_MAX_DRAW_CALLS);
 
-  
+  foundation::memory_globals::init();
+
+  renderer::CommandBuffer<uint64_t> command_buffer(foundation::memory_globals::default_allocator());
+
   ShaderID vert, frag;
   ShaderProgramID program;
   VertexArrayID vao;
   VertexBufferID vbo;
   IndexArrayID ibo;
 
-  VertSpec vert_spec;
+  VertexAttribArray vert_spec(foundation::memory_globals::default_allocator());
+  foundation::array::reserve(vert_spec, 2);
+  push_attrib(vert_spec, "position", 0, 4, FLOAT);
+  push_attrib(vert_spec, "color", 1, 4, FLOAT);
   
-  const char* names[]= {
-    "position",
-    "color"
-  };
-  vert_spec.attrib_names = names;
-  int locations[] = {
-    0,
-    1
-  };
-  
-  vert_spec.attrib_locations = locations;
-  vert_spec.num_attributes = 2;
-
   vert = load_shader_source("assets/shaders/test.vert", VERTEX_SHADER);
   frag = load_shader_source("assets/shaders/test.frag", FRAGMENT_SHADER);
   ShaderID shaders[] = { vert, frag };
@@ -101,14 +86,36 @@ int main(int, char**)
   // buffer handle + data -> renderer -> vbo
   // vertex spec -> renderer -> vao handle
 
-  glGenVertexArrays(1, &vao);
   glGenBuffers(1, &vbo);
   glGenBuffers(1, &ibo);
+  glGenVertexArrays(1, &vao);
+  
+  glBindVertexArray(vao);
+  
+  glBindBuffer(GL_ARRAY_BUFFER, vbo);
+  glBufferData(GL_ARRAY_BUFFER, sizeof(Vertices), (void*) Vertices, GL_STATIC_DRAW);
+
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo);
+  glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(Indices), (void*) Indices, GL_STATIC_DRAW);
+  
+  for (size_t i = 0; i < foundation::array::size(vert_spec); i++)
+  {
+    VertexAttribute& attrib = vert_spec[i];
+    glEnableVertexAttribArray(attrib.location);
+    glVertexAttribPointer(attrib.location, attrib.size,
+                          attrib.type, false, vert_spec.vert_size, (const void*) attrib.offset);
+  }
+  
+  glBindVertexArray(0);
+
+  glBindBuffer(GL_ARRAY_BUFFER, 0);
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
   
   //
   
   bool quit = false;
   InputEvent input_event;
+  
   while(!quit)
   {
     while (poll_events(input_event))
@@ -128,6 +135,21 @@ int main(int, char**)
         break;
       }
     }
+    
+    renderer::DrawIndexed* dc = command_buffer.push_command<renderer::DrawIndexed>(0, 0);
+    dc->vao = vao;
+    dc->draw_type = TRIANGLES;
+    dc->start_index = 0;
+    dc->num_indices = TZ_ARRAY_SIZE(Indices);
+    dc->indices_type = UNSIGNED_BYTE;
+    dc->material.shader = program;
+    dc->material.num_textures = 0;
+
+    renderer::clear_backbuffer(COLOR_BUFFER_BIT | DEPTH_BUFFER_BIT);
+    command_buffer.sort();
+    command_buffer.submit();
+    command_buffer.reset();
+
     frame();
   }
   

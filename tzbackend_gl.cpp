@@ -3,10 +3,17 @@
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
 
+#include "tzbackend_types.h"
+
 namespace tz
 {
 namespace renderer
 {
+
+void clear_backbuffer(GraphicsBitfield buffer_bits)
+{
+  glClear(buffer_bits);
+}
 
 static void bind_material(Material& material)
 {
@@ -39,29 +46,13 @@ static void bind_vao(VertexArrayID vao)
   }
 }
 
-static size_t get_ogl_type_size(DataType type)
-{
-  switch(type)
-  {
-   case (UNSIGNED_BYTE):
-     return sizeof(GLubyte);
-     break;
-   case (UNSIGNED_SHORT):
-     return sizeof(GLushort);
-     break;
-   case (UNSIGNED_INT):
-     return sizeof(GLuint);
-     break;
-  };
-}
-
 ////////////////////////////////////////////////////////////////////////////////
-// Backend commands
+// Backend
 ////////////////////////////////////////////////////////////////////////////////
 
-TZ_BACKEND_DISPATCH_IMPL(UploadNUniforms)
+void GLBackend::dispatch(UploadNUniforms* data)
 {
-  UploadNUniforms* uniform_command = (UploadNUniforms*) data;
+  UploadNUniforms* uniform_command = data;
   void* uniform_data = Command::get_aux_data(data);
     
   switch(uniform_command->type)
@@ -78,29 +69,29 @@ TZ_BACKEND_DISPATCH_IMPL(UploadNUniforms)
      glUniform3fv(uniform_command->location, uniform_command->n, (const GLfloat*) uniform_data);
      break;
    case UploadNUniforms::MAT4:
-     glUniformMatrix4fv(uniform_command->location, uniform_command->n, transpose, (const GLfloat*) uniform_data);
+     glUniformMatrix4fv(uniform_command->location, uniform_command->n, uniform_command->transpose, (const GLfloat*) uniform_data);
      break;
   }
 }
-
-TZ_BACKEND_DISPATCH_IMPL(DrawIndexed)
+  
+void GLBackend::dispatch(DrawIndexed* data)
 {
-  DrawIndexed* command = (DrawIndexed*) data;
+  DrawIndexed* command = data;
 
   bind_vao(command->vao);
   bind_material(command->material);
-  
-  glDrawElements(command->draw_type, command->num_indices, command->indices_type, (const void*) (get_ogl_type_size(command->indices_type) * command->start_index));
+    
+  glDrawElements(command->draw_type, command->num_indices, command->indices_type, (const void*) (get_type_size(command->indices_type) * command->start_index));
 }
   
-TZ_BACKEND_DISPATCH_IMPL(DrawIndexedInstanced)
+void GLBackend::dispatch(DrawIndexedInstanced* data)
 {
-  DrawIndexedInstanced* command = (DrawIndexedInstanced*) data;
-
+  DrawIndexedInstanced* command = data;
+    
   bind_vao(command->vao);
   bind_material(command->material);
-  
-  glDrawElementsInstanced(command->draw_type, command->num_indices, command->indices_type, (const void*) (get_ogl_type_size(command->indices_type) * command->start_index), command->instances);
+    
+  glDrawElementsInstanced(command->draw_type, command->num_indices, command->indices_type, (const void*) (get_type_size(command->indices_type) * command->start_index), command->instances);
 }
   
 }

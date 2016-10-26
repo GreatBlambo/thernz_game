@@ -2,9 +2,9 @@
 
 namespace tz
 {
-  LinearAllocator::LinearAllocator(void* data, size_t size)
+  LinearAllocator::LinearAllocator(foundation::Allocator& alloc, size_t size)
   {
-    create_buffer(&m_buffer, data, size);
+    fatal_game_error(create_buffer(&m_buffer, alloc.allocate(size), size));
   }
 
   void* LinearAllocator::allocate(uint32_t size, uint32_t align)
@@ -27,18 +27,27 @@ namespace tz
     return m_buffer.offset;
   }
 
-  ////////////////////////////////////////////////////////////////////////////////
-  
-  AtomicLinearAllocator::AtomicLinearAllocator(void* data, size_t size)
+  void LinearAllocator::reset()
   {
-    m_data = (byte*) data;
-    m_size = size;
+    buffer_reset(&m_buffer);
   }
 
+  ////////////////////////////////////////////////////////////////////////////////
+  
+  AtomicLinearAllocator::AtomicLinearAllocator(foundation::Allocator& alloc, size_t size)
+  {
+    m_data = (byte*) alloc.allocate(size);
+    TZ_ASSERT(m_data, "Alloc failed\n");
+    m_size = size;
+    m_offset = 0;
+  }
+
+// TODO: Alignment?
   void* AtomicLinearAllocator::allocate(uint32_t size, uint32_t align)
   {
-    if (m_offset + size > m_size) return NULL;
-    m_offset.fetch_add(size, std::memory_order_release);
+    if (size > m_size)
+      return NULL;
+    m_offset += size;
     return (void*) (m_data + m_offset);
   }
 
@@ -55,5 +64,10 @@ namespace tz
   uint32_t AtomicLinearAllocator::total_allocated()
   {
     return (uint32_t) m_offset;
+  }
+
+  void AtomicLinearAllocator::reset()
+  {
+    m_offset = 0;
   }
 }

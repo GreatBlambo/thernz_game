@@ -10,6 +10,7 @@
 #include "tzconfig.h"
 #include "tzrender_types.h"
 #include "tzsort.h"
+#include "tzbackend_dispatch.h"
 
 namespace tz
 {
@@ -56,11 +57,13 @@ namespace renderer
   public:
         
     typedef T Key;
-    CommandBuffer(foundation::Allocator& allocator, size_t data_size, size_t reserve_calls)
-      : m_data_allocator(allocator.allocate(data_size), data_size)
+    CommandBuffer(foundation::Allocator& allocator, size_t data_size = TZ_CONFIG_COMMAND_BUFFER_MAX_SIZE, size_t reserve_calls = TZ_CONFIG_MAX_DRAW_CALLS)
+      : m_data_allocator(allocator, data_size)
       , m_base_allocator(allocator)
       , m_reserved_calls(reserve_calls)
-      , m_num_calls(0)
+      , m_num_calls(reserve_calls)
+      , m_keys(NULL)
+      , m_commands(NULL)
     {
       reserve_draw_calls(reserve_calls);
     }
@@ -74,32 +77,42 @@ namespace renderer
     void reset()
     {
       m_num_calls = 0;
+      m_data_allocator.reset();
     }
     
     void reserve_draw_calls(size_t n)
     {
-      if (n <= m_reserved_calls)
+      if (n <= m_reserved_calls
+	  && m_keys && m_commands)
         return;
+      m_base_allocator.deallocate(m_keys);
+      m_base_allocator.deallocate(m_commands);
+      
       m_keys = (sort::SortKey<Key>*) m_base_allocator.allocate(n * sizeof(Key));
       m_commands = (Command**) m_base_allocator.allocate(n * sizeof(Command*));
+      
+      TZ_ASSERT(m_keys, "Key array alloc failure\n");
+      TZ_ASSERT(m_commands, "Command array alloc failure\n");
         
       m_reserved_calls = n;
       reset();
     }
-    
+
     template <typename DataType>
     DataType* push_command(Key key, size_t aux_size)
     {
-      if (m_num_calls > m_reserved_calls) return NULL;
-      Command* new_command = allocate_command(aux_size);
+      if (m_num_calls > m_reserved_calls)
+	return NULL;
+      Command* new_command = allocate_command<DataType>(aux_size);
       
       // Add Command
       m_commands[m_num_calls] = new_command;
       
       // Add Key
-      sort::SortKey<Key>* new_key = m_keys + m_num_calls;
-      new_key->key = key;
-      new_key->data = (void*) new_command;
+      sort::SortKey<Key> new_key;
+      new_key.key = key;
+      new_key.data = (void*) new_command;
+      m_keys[m_num_calls] = new_key;
       
       m_num_calls.fetch_add(1, std::memory_order_release);
       return (DataType*) new_command->data;
@@ -125,7 +138,7 @@ namespace renderer
     {
       for (size_t i = 0; i < m_num_calls; i++)
       {
-        Command* command = (Command*) m_keys[m_num_calls].data;
+        Command* command = (Command*) m_keys[i].data;
         do
         {
           command->dispatch(command->data);
@@ -138,7 +151,7 @@ namespace renderer
     template <typename DataType>
     Command* allocate_command(size_t aux_size)
     {
-      Command* new_command = m_data_allocator.allocate(sizeof(Command) + sizeof(DataType) + aux_size);
+      Command* new_command = (Command*) m_data_allocator.allocate(sizeof(Command) + sizeof(DataType) + aux_size);
       DataType* data = (DataType*) (new_command + 1);
       void* aux_data = (void*) (data + 1);
       

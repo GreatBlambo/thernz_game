@@ -6,6 +6,64 @@
 namespace tz
 {
 
+////////////////////////////////////////////////////////////////////////////////
+// Types
+////////////////////////////////////////////////////////////////////////////////
+
+size_t get_type_size(DataType data_type)
+{
+  switch(data_type)
+  {
+   case(UNSIGNED_BYTE):
+     return sizeof(GLubyte);
+     break;
+   case(UNSIGNED_SHORT):
+     return sizeof(GLushort);
+     break;
+   case(UNSIGNED_INT):
+     return sizeof(GLuint);
+     break;
+   case(FLOAT):
+     return sizeof(GLfloat);
+     break;
+  }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// Vertex Specification
+////////////////////////////////////////////////////////////////////////////////
+
+VertexAttribArray::VertexAttribArray(foundation::Allocator& alloc)
+  : foundation::Array<VertexAttribute>(alloc)
+{}
+
+void push_attrib(VertexAttribArray& array, const char* name, int location, int size, DataType type)
+{
+  VertexAttribute new_attrib;
+  strcpy(new_attrib.name, name);
+  new_attrib.location = location;
+  new_attrib.size = size;
+  new_attrib.type = type;
+
+  if (foundation::array::size(array) == 0)
+  {
+    new_attrib.offset = 0;
+  }
+  else
+  {
+    VertexAttribute& last = foundation::array::back(array);
+    new_attrib.offset = last.offset + (last.size * get_type_size(last.type));
+  }
+
+  array.vert_size = new_attrib.offset + (size * get_type_size(type));
+
+  foundation::array::push_back(array, new_attrib);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// Sprites
+////////////////////////////////////////////////////////////////////////////////
+
 void create_sprite(Sprite* sprite, glm::vec2 texture_offset, glm::vec2 tex_dims, glm::vec2 sprite_dims, Texture* texture, Color color)
 {
   sprite->sprite_uv.x = texture_offset.x / tex_dims.x;
@@ -121,7 +179,7 @@ void destroy_shader(ShaderID shader)
   glDeleteShader(shader);
 }
 
-ShaderProgramID link_shader_program(ShaderID* shaders, size_t num_shaders, const VertSpec& vertex_spec)
+ShaderProgramID link_shader_program(ShaderID* shaders, size_t num_shaders, const VertexAttribArray& vertex_spec)
 {
   if (!shaders)
     return 0;
@@ -131,10 +189,11 @@ ShaderProgramID link_shader_program(ShaderID* shaders, size_t num_shaders, const
   {
     glAttachShader(program, shaders[i]);
   }
-  for (size_t i = 0; i < vertex_spec.num_attributes; i++)
+  for (size_t i = 0; i < foundation::array::size(vertex_spec); i++)
   {
+    const VertexAttribute& attrib = vertex_spec[i];
     glBindAttribLocation(program,
-                         vertex_spec.attrib_locations[i], vertex_spec.attrib_names[i]);
+                         attrib.location, attrib.name);
   }
 
   glLinkProgram(program);

@@ -81,6 +81,7 @@ void set_window_size(int width, int height)
 {
   SDL_SetWindowSize(g_main_window, width, height);
   SDL_SetWindowPosition(g_main_window, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED);
+  glViewport(0, 0, width, height);
 }
 
 void set_window_fullscreen()

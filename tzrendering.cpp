@@ -2,6 +2,9 @@
 #include "tzhash.h"
 #include "tzsort.h"
 
+#include "tzbackend_dispatch.h"
+#include "tzbackend_types.h"
+
 namespace tz
 {
 
@@ -147,19 +150,25 @@ struct KeyData
 // Module interface
 ////////////////////////////////////////////////////////////////////////////////
 
-#include "tzbackend_dispatch.h"
+// Any code inside these functions is temporary until we develop a default renderer
+
+IBackend* g_backend;
+GLBackend g_backend_gl;
 
 void init_rendering()
 {
-  
+  // init default renderer and backend
+  g_backend = &g_backend_gl;
 }
 
 void deinit_rendering()
 {
+  // destroy default renderer
 }
 
 void push_frame()
 {
+  // submit rendering thru default renderer
 }
 
 }
