@@ -1,5 +1,5 @@
 * Tasks
-** TODO Handle arrays
+** TODO Add commands for uploading resources like textures, buffers, etc
 ** TODO Finish up slab allocator
 ** TODO Replace std::sort with some radix sort for renderer
 ** TODO Create a bitsquid allocator that works on Buffer
