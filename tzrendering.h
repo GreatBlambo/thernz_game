@@ -24,37 +24,37 @@ namespace renderer
   ////////////////////////////////////////////////////////////////////////////////
   // CommandBuffer
   ////////////////////////////////////////////////////////////////////////////////
-
-  struct Command
-  {
-    typedef void (*DispatchFunction) (void* data);
-    DispatchFunction dispatch;
-    void* data;
-    void* aux_data;
-    size_t aux_data_size;
-    Command* next_command;
-
-    static Command* get_command(void* data)
-    {
-      return ((Command*) data) - 1;
-    }
-    
-    static void* get_aux_data(void* data)
-    {
-      return get_command(data)->aux_data;
-    }
-    
-    static size_t get_aux_size(void* data)
-    {
-      return get_command(data)->aux_data_size;
-    }
-
-  };
   
-  template <typename T>
+  template <class Backend, typename T>
   class CommandBuffer
   {
   public:
+    struct Command
+    {
+      typedef void (*DispatchFunction) (Backend* backend, void* data);
+      DispatchFunction dispatch;
+      void* data;
+      void* aux_data;
+      size_t aux_data_size;
+      Command* next_command;
+      
+      static Command* get_command(void* data)
+      {
+        return ((Command*) data) - 1;
+      }
+      
+      static void* get_aux_data(void* data)
+      {
+        return get_command(data)->aux_data;
+      }
+      
+      static size_t get_aux_size(void* data)
+      {
+        return get_command(data)->aux_data_size;
+      }
+      
+    };
+    
         
     typedef T Key;
     CommandBuffer(foundation::Allocator& allocator, size_t data_size = TZ_CONFIG_COMMAND_BUFFER_MAX_SIZE, size_t reserve_calls = TZ_CONFIG_MAX_DRAW_CALLS)
@@ -134,14 +134,14 @@ namespace renderer
       std::sort(m_keys, m_keys + m_num_calls);
     }
 
-    void submit()
+    void submit(Backend* backend)
     {
       for (size_t i = 0; i < m_num_calls; i++)
       {
         Command* command = (Command*) m_keys[i].data;
         do
         {
-          command->dispatch(command->data);
+          command->dispatch(backend, command->data);
           command = command->next_command;
         } while (command);
       }

@@ -21,8 +21,7 @@ namespace tz
       // Backends hold HandleArrays full of their own kinds of data
     };
     
-    extern IBackend* g_backend;
-#define TZ_GLOBAL_BACKEND_CALL(type) inline static void function(void* data) { g_backend->dispatch((type*) data); }
+#define TZ_GLOBAL_BACKEND_CALL(type) inline static void function(IBackend* backend, void* data) { backend->dispatch((type*) data); }
   
     ////////////////////////////////////////////////////////////////////////////////
     // Backend commands

@@ -152,13 +152,9 @@ struct KeyData
 
 // Any code inside these functions is temporary until we develop a default renderer
 
-IBackend* g_backend;
-GLBackend g_backend_gl;
-
 void init_rendering()
 {
   // init default renderer and backend
-  g_backend = &g_backend_gl;
 }
 
 void deinit_rendering()
