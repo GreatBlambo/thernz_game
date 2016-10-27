@@ -24,6 +24,6 @@ namespace tz
   void fatal_error(const char* fmt, ...);
 
 #define TZ_ASSERT(cond, ...) do { if (!cond) { fprintf(stderr, "ASSERT FAILURE: \"" #cond "\"\n"); fprintf(stderr, __VA_ARGS__ ); exit(0);} } while(0)
-#define TZ_STATIC_ASSERT(cond) typedef int static_assert_cond[cond ? 1 : -1];
+#define TZ_STATIC_ASSERT(cond, msg) typedef int _static_assert_##msg[(cond) ? 1 : -1];
 
 };
