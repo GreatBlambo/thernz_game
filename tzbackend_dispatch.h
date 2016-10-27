@@ -46,18 +46,32 @@ namespace renderer
     Material material;
   };
 
+  extern void (*clear_backbuffer)(GraphicsBitfield);
   
 #define TZ_BACKEND_DISPATCH_API_DECL(command_name, backend)		\
-  static void _##command_name(void* data);				
+  static void _##command_name(void* data);
+
+#define TZ_BACKEND_FREE_FUNCTION_DECL(return_type, name, ...)	\
+  static return_type _##name(__VA_ARGS__);
+
+#define TZ_BACKEND_DISPATCH_API_IMPL(api, command_name)			\
+  void api::_##command_name(void* data)					
+#define TZ_BACKEND_FREE_FUNCTION_IMPL(api, return_type, name, ...)	\
+  return_type api::_##name(__VA_ARGS__)
   
 #define TZ_GRAPHICS_BACKEND(backend)					\
-  TZ_BACKEND_DISPATCH_API_DECL(UploadNUniforms, backend);		\
-  TZ_BACKEND_DISPATCH_API_DECL(DrawIndexed, backend);			\
-  static void bind_commands()						\
+  struct backend							\
   {									\
-    UploadNUniforms::dispatch = backend::_UploadNUniforms;		\
-    DrawIndexed::dispatch = backend::_DrawIndexed;			\
-  }
+    TZ_BACKEND_DISPATCH_API_DECL(UploadNUniforms, backend);		\
+    TZ_BACKEND_DISPATCH_API_DECL(DrawIndexed, backend);			\
+    TZ_BACKEND_FREE_FUNCTION_DECL(void, clear_backbuffer, GraphicsBitfield bitfield); \
+    static void bind_commands()						\
+    {									\
+      UploadNUniforms::dispatch = backend::_UploadNUniforms;		\
+      DrawIndexed::dispatch = backend::_DrawIndexed;			\
+      clear_backbuffer = backend::_clear_backbuffer;			\
+    }									\
+  };
   
 }
 }

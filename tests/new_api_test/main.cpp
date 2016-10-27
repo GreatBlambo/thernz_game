@@ -1,4 +1,3 @@
-
 #include <tzengine.h>
 
 using namespace tz;
@@ -59,9 +58,9 @@ GLubyte Indices[] = {
 
 int main(int, char**)
 {
-  init(TZ_GIGABYTE(1), TZ_GIGABYTE(1), RENDERING);
-  renderer::set_window_name("test");
-  renderer::set_window_size(800, 600);
+  init(TZ_GIGABYTE(1), TZ_GIGABYTE(1), GRAPHICS | RENDERING);
+  graphics::set_window_name("test");
+  graphics::set_window_size(800, 600);
 
   foundation::memory_globals::init();
 
@@ -78,11 +77,11 @@ int main(int, char**)
   push_attrib(vert_spec, "position", 0, 4, FLOAT);
   push_attrib(vert_spec, "color", 1, 4, FLOAT);
   
-  vert = renderer::load_shader_source("assets/shaders/test.vert", VERTEX_SHADER);
-  frag = renderer::load_shader_source("assets/shaders/test.frag", FRAGMENT_SHADER);
+  vert = graphics::load_shader_source("assets/shaders/test.vert", VERTEX_SHADER);
+  frag = graphics::load_shader_source("assets/shaders/test.frag", FRAGMENT_SHADER);
   
   ShaderID shaders[] = { vert, frag };
-  program = renderer::link_shader_program(shaders, 2, vert_spec);
+  program = graphics::link_shader_program(shaders, 2, vert_spec);
 
   // Replace this with vao gen, buffer update/generation
   // buffer handle + data -> renderer -> vbo

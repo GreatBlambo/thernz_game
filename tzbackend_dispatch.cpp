@@ -10,5 +10,7 @@ namespace renderer
 TZ_BACKEND_DISPATCH_DEF(UploadNUniforms);
 TZ_BACKEND_DISPATCH_DEF(DrawIndexed);
 
+void (*clear_backbuffer)(GraphicsBitfield) = NULL;
+
 }
 }

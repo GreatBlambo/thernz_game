@@ -1,6 +1,7 @@
 #include "tzmemory.h"
 #include "tzerror_codes.h"
 #include "tzengine.h"
+#include "tzgraphics.h"
 #include "tzrendering.h"
 
 namespace tz
@@ -9,17 +10,25 @@ GameState g_game_state;
 
 static void init_systems(int flags)
 {
-  if (flags & RENDERING)
+  if (flags & GRAPHICS)
   {
-    renderer::init_rendering();
+    graphics::init_graphics();
+    if (flags & RENDERING)
+    {
+      renderer::init_rendering();
+    }
   }
 }
 
 static void deinit_systems(int flags)
 {
-  if (flags & RENDERING)
+  if (flags & GRAPHICS)
   {
-    renderer::deinit_rendering();
+    graphics::deinit_graphics();
+    if (flags & RENDERING)
+    {
+      renderer::deinit_rendering();
+    }
   }
 }
   
@@ -51,6 +60,10 @@ void frame()
   if (g_game_state.flags & RENDERING)
   {
     renderer::push_frame();
+    if (g_game_state.flags & GRAPHICS)
+    {
+      graphics::swap_backbuffer();
+    }
   }
   
   flush_frame();

@@ -1,6 +1,7 @@
 #pragma once
 #include "tzmemory.h"
 #include "tzinput.h"
+#include "tzgraphics.h"
 #include "tzrendering.h"
 
 namespace tz
@@ -8,7 +9,8 @@ namespace tz
   enum SystemFlags
   {
     ZERO = 0,
-    RENDERING = 1
+    GRAPHICS = 1,
+    RENDERING = 1 << 1
   };
   
   void init(const size_t main_memory_size, const size_t frame_memory_size, int flags);

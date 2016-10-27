@@ -13,6 +13,7 @@ endif()
 # Source files
 
 set(SOURCES tzbackend_gl.cpp
+	    tzgraphics_gl.cpp
 	    tzbackend_dispatch.cpp
             tzrendering.cpp
             tzengine.cpp

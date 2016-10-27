@@ -155,26 +155,20 @@ struct KeyData
 
 // Any code inside these functions is temporary until we develop a default renderer
 
-static IBackend* g_backend;
-static BackendGL g_backend_gl;
-
 void init_rendering()
 {
   // init default renderer and backend
   set_backend(TZ_CONFIG_DEFAULT_GFX_BACKEND);
-  fatal_game_error(g_backend->init());
 }
 
 void deinit_rendering()
 {
   // destroy default renderer
-  g_backend->deinit();
 }
 
 void push_frame()
 {
   // submit rendering thru default renderer
-  swap_backbuffer();
 }
 
 void set_backend(BackendType type)
@@ -182,87 +176,10 @@ void set_backend(BackendType type)
   switch (type)
   {
    case OPENGL:
-     g_backend = &g_backend_gl;
      BackendGL::bind_commands();
      break;
   }
 }
-
-void set_window_name(const char* name)
-{
-  g_backend->set_window_name(name);
-}
-
-void set_window_size(int width, int height)
-{
-  g_backend->set_window_size(width, height);
-}
-
-void set_window_fullscreen()
-{
-  g_backend->set_window_fullscreen();
-}
-
-void set_window_fullscreen_windowed()
-{
-  g_backend->set_window_fullscreen_windowed();
-}
-
-void set_window_windowed()
-{
-  g_backend->set_window_windowed();
-}
-
-void set_window_position(int x, int y)
-{
-  g_backend->set_window_position(x, y);
-}
-
-void swap_backbuffer()
-{
-  g_backend->swap_backbuffer();
-}
-
-void clear_backbuffer(GraphicsBitfield bitfield)
-{
-  g_backend->clear_backbuffer(bitfield);
-}
-
-GameError load_image_as_texture(int* width, int* height, Texture* texture, const char* pathname)
-{
-  g_backend->load_image_as_texture(width, height, texture, pathname);
-}
-
-void destroy_texture(Texture* texture)
-{
-  g_backend->destroy_texture(texture);
-}
-
-ShaderID load_shader_source(const char* pathname, ShaderType shader_type)
-{
-  g_backend->load_shader_source(pathname, shader_type);
-}
-
-void destroy_shader(ShaderID shader)
-{
-  g_backend->destroy_shader(shader);
-}
-
-ShaderProgramID link_shader_program(ShaderID* shaders, size_t num_shaders, const VertexAttribArray& vertex_spec)
-{
-  g_backend->link_shader_program(shaders, num_shaders, vertex_spec);
-}
-
-void destroy_program(ShaderProgramID program)
-{
-  g_backend->destroy_program(program);
-}
-
-GameError detach_shaders(ShaderProgramID program, ShaderID* shaders, size_t num_shaders)
-{
-  g_backend->detach_shaders(program, shaders, num_shaders);
-}
-
 
 }
 }
