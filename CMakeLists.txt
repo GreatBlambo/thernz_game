@@ -12,8 +12,8 @@ endif()
 
 # Source files
 
-set(SOURCES tzgraphics_gl.cpp
-            tzbackend_gl.cpp
+set(SOURCES tzbackend_gl.cpp
+	    tzbackend_dispatch.cpp
             tzrendering.cpp
             tzengine.cpp
             tzinput.cpp

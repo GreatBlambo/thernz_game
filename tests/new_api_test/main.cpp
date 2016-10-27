@@ -60,9 +60,9 @@ GLubyte Indices[] = {
 
 int main(int, char**)
 {
-  init(TZ_GIGABYTE(1), TZ_GIGABYTE(1), GRAPHICS | RENDERING);
-  graphics::set_window_name("test");
-  graphics::set_window_size(800, 600);
+  init(TZ_GIGABYTE(1), TZ_GIGABYTE(1), RENDERING);
+  renderer::set_window_name("test");
+  renderer::set_window_size(800, 600);
 
   foundation::memory_globals::init();
 
@@ -79,10 +79,11 @@ int main(int, char**)
   push_attrib(vert_spec, "position", 0, 4, FLOAT);
   push_attrib(vert_spec, "color", 1, 4, FLOAT);
   
-  vert = load_shader_source("assets/shaders/test.vert", VERTEX_SHADER);
-  frag = load_shader_source("assets/shaders/test.frag", FRAGMENT_SHADER);
+  vert = renderer::load_shader_source("assets/shaders/test.vert", VERTEX_SHADER);
+  frag = renderer::load_shader_source("assets/shaders/test.frag", FRAGMENT_SHADER);
+  
   ShaderID shaders[] = { vert, frag };
-  program = link_shader_program(shaders, 2, vert_spec);
+  program = renderer::link_shader_program(shaders, 2, vert_spec);
 
   // Replace this with vao gen, buffer update/generation
   // buffer handle + data -> renderer -> vbo
@@ -137,8 +138,10 @@ int main(int, char**)
         break;
       }
     }
-    
-    renderer::DrawIndexed* dc = command_buffer.push_command<renderer::DrawIndexed>(0, 0);
+
+    renderer::Command* command = command_buffer.push_command<renderer::DrawIndexed>(0, 0);
+    renderer::Command::set_function(command, renderer::DrawIndexed::dispatch);
+    renderer::DrawIndexed* dc = renderer::Command::get_data<renderer::DrawIndexed>(command);
     dc->vao = vao;
     dc->draw_type = TRIANGLES;
     dc->start_index = 0;
@@ -146,8 +149,8 @@ int main(int, char**)
     dc->indices_type = UNSIGNED_BYTE;
     dc->material.shader = program;
     dc->material.num_textures = 0;
+    dc->instances = 0;
 
-    renderer::clear_backbuffer(COLOR_BUFFER_BIT | DEPTH_BUFFER_BIT);
     command_buffer.sort();
     command_buffer.submit();
     command_buffer.reset();
