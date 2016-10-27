@@ -17,7 +17,6 @@ class IBackend
 // Backend types
 struct UploadNUniforms
 {
-  TZ_DISPATCH_FUNC(UploadNUniforms)
   bool transpose;
   int location;
   size_t n;
@@ -34,7 +33,6 @@ struct UploadNUniforms
   
 struct DrawIndexed
 {
-  TZ_DISPATCH_FUNC(DrawIndexed)
   VertexArrayID vao;
   DrawType draw_type;
     
@@ -47,7 +45,6 @@ struct DrawIndexed
   
 struct DrawIndexedInstanced
 {
-  TZ_DISPATCH_FUNC(DrawIndexedInstanced)
   VertexArrayID vao;
   DrawType draw_type;
     

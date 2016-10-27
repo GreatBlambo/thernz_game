@@ -24,39 +24,52 @@ namespace renderer
   ////////////////////////////////////////////////////////////////////////////////
   // CommandBuffer
   ////////////////////////////////////////////////////////////////////////////////
+
+  struct Command
+  {
+    typedef void (*DispatchFunction) (void* data);
+    DispatchFunction dispatch;
+    void* data;
+    void* aux_data;
+    size_t aux_data_size;
+    Command* next_command;
+
+    template <typename T>
+    static T* get_data(Command* command)
+    {
+      return (T*) command->data;
+    }
+    
+    static void* get_aux_data(Command* command)
+    {
+      return command->aux_data;
+    }
+      
+    static size_t get_aux_size(Command* data)
+    {
+      return get_command(data)->aux_data_size;
+    }
+
+    static void set_function(Command* command, DispatchFunction dispatch)
+    {
+      command->dispatch = dispatch;
+    }
+
+    static void fill_aux_data(Command* command, void* source_data, size_t size)
+    {
+      if (size > command->aux_data_size)
+	return;
+      memcpy(command->data, source_data, size);
+    }
+  };
   
-  template <class Backend, typename T>
+  template <typename T>
   class CommandBuffer
   {
   public:
-    struct Command
-    {
-      typedef void (*DispatchFunction) (Backend* backend, void* data);
-      DispatchFunction dispatch;
-      void* data;
-      void* aux_data;
-      size_t aux_data_size;
-      Command* next_command;
-      
-      static Command* get_command(void* data)
-      {
-        return ((Command*) data) - 1;
-      }
-      
-      static void* get_aux_data(void* data)
-      {
-        return get_command(data)->aux_data;
-      }
-      
-      static size_t get_aux_size(void* data)
-      {
-        return get_command(data)->aux_data_size;
-      }
-      
-    };
-    
         
     typedef T Key;
+    
     CommandBuffer(foundation::Allocator& allocator, size_t data_size = TZ_CONFIG_COMMAND_BUFFER_MAX_SIZE, size_t reserve_calls = TZ_CONFIG_MAX_DRAW_CALLS)
       : m_data_allocator(allocator, data_size)
       , m_base_allocator(allocator)
@@ -99,7 +112,7 @@ namespace renderer
     }
 
     template <typename DataType>
-    DataType* push_command(Key key, size_t aux_size)
+    Command* push_command(Key key, size_t aux_size)
     {
       if (m_num_calls > m_reserved_calls)
 	return NULL;
@@ -115,16 +128,14 @@ namespace renderer
       m_keys[m_num_calls] = new_key;
       
       m_num_calls.fetch_add(1, std::memory_order_release);
-      return (DataType*) new_command->data;
+      return new_command;
     }
 
-    template <typename DataType1, typename DataType2>
-    DataType2* chain_command(size_t aux_size, DataType1* parent)
+    template <typename DataType2>
+    Command* chain_command(size_t aux_size, Command* parent)
     {
-      Command* previous_command = Command::get_command((void*) parent);
-      DataType2* new_entry = allocate_command<DataType2>(aux_size);
-
-      previous_command->next_command = Command::get_command((void*) new_entry);
+      Command* new_entry = allocate_command<DataType2>(aux_size);
+      previous_command->next_command = new_entry;
 
       return new_entry;
     }
@@ -134,7 +145,7 @@ namespace renderer
       std::sort(m_keys, m_keys + m_num_calls);
     }
 
-    void submit(Backend* backend)
+    void submit()
     {
       for (size_t i = 0; i < m_num_calls; i++)
       {
@@ -156,7 +167,7 @@ namespace renderer
       void* aux_data = (void*) (data + 1);
       
       new_command->data = data;
-      new_command->dispatch = DataType::function;
+      new_command->dispatch = NULL;
       new_command->aux_data = aux_data;
       new_command->aux_data_size = aux_size;
       new_command->next_command = NULL;
