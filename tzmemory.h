@@ -20,7 +20,6 @@ namespace tz
 #define TZ_ARRAY_SIZE(x) sizeof(x)/sizeof(*x)
 
 #define TZ_BIT_MASK(bits) ((1ull << bits) - 1)
-#define TZ_MASK_GET(val, width, lsb) (val >> lsb) & TZ_BIT_MASK(width);
 
 ////////////////////////////////////////////////////////////////////////////////
 // Types
@@ -118,7 +117,6 @@ class LinearAllocator : public foundation::Allocator
 {
 public:
   LinearAllocator(foundation::Allocator& alloc, size_t size);
-  ~LinearAllocator();
 
   void* allocate(uint32_t size, uint32_t align = foundation::Allocator::DEFAULT_ALIGN);
 
@@ -132,14 +130,12 @@ public:
   
 private:
   Buffer m_buffer;
-  foundation::Allocator& m_alloc;
 };
 
 class AtomicLinearAllocator : public foundation::Allocator
 {
 public:
   AtomicLinearAllocator(foundation::Allocator& alloc, size_t size);
-  ~AtomicLinearAllocator();
 
   void* allocate(uint32_t size, uint32_t align = foundation::Allocator::DEFAULT_ALIGN);
 
@@ -155,8 +151,6 @@ private:
   std::atomic_size_t m_offset;
   size_t m_size;
   byte* m_data;
-
-  foundation::Allocator& m_alloc;
 };
 
 }

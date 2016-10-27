@@ -58,7 +58,7 @@ namespace renderer
 #define SORT_TEXTURE_MASK      (TZ_BIT_MASK(SORT_TEXTURE_BITS     ) << SORT_TEXTURE_SHIFT)
 #define SORT_SHADER_MASK       (TZ_BIT_MASK(SORT_SHADER_BITS      ) << SORT_SHADER_SHIFT)
 #define SORT_MATERIAL_MASK     (TZ_BIT_MASK(SORT_MATERIAL_BITS    ) << SORT_MATERIAL_SHIFT)
-#define SORT_CMD_FLG_MASK      (TZ_BIT_MASK(SORT_CMD_FLG_BITS     ) << SORT_CMD_FLG_SHIFT)
+#define SORT_CMD_FLG_MASK      (TZ_BIT_MASK(SORT_CMD_FLG_BITS         ) << SORT_CMD_FLG_SHIFT)
 #define SORT_TRANSLUCENCY_MASK (TZ_BIT_MASK(SORT_TRANSLUCENCY_BITS) << SORT_TRANSLUCENCY_SHIFT)
 #define SORT_PASS_MASK         (TZ_BIT_MASK(SORT_PASS_BITS        ) << SORT_PASS_SHIFT)
 #define SORT_VIEW_MASK         (TZ_BIT_MASK(SORT_VIEW_BITS        ) << SORT_VIEW_SHIFT)
@@ -69,21 +69,21 @@ namespace renderer
 
 // Bits add up to 64
 TZ_STATIC_ASSERT(64 ==
-                 SORT_DEPTH_BITS
+  SORT_DEPTH_BITS
                  + SORT_MATERIAL_BITS
                  + SORT_CMD_FLG_BITS
                  + SORT_TRANSLUCENCY_BITS
                  + SORT_PASS_BITS
-                 + SORT_VIEW_BITS, wrong_number_bits_draw);
+                 + SORT_VIEW_BITS);
 TZ_STATIC_ASSERT(64 ==
-                 SORT_COMMAND_BITS
+  SORT_COMMAND_BITS
                  + SORT_CMD_FLG_BITS
                  + SORT_TRANSLUCENCY_BITS
                  + SORT_PASS_BITS
-                 + SORT_VIEW_BITS, wrong_number_bits_command);
+                 + SORT_VIEW_BITS);
 // Bit fields don't overlap
 TZ_STATIC_ASSERT((0 | SORT_DEPTH_MASK
-                  | SORT_MATERIAL_MASK
+| SORT_MATERIAL_MASK
                   | SORT_CMD_FLG_MASK
                   | SORT_TRANSLUCENCY_MASK
                   | SORT_PASS_MASK
@@ -94,7 +94,7 @@ TZ_STATIC_ASSERT((0 | SORT_DEPTH_MASK
                   ^ SORT_CMD_FLG_MASK
                   ^ SORT_TRANSLUCENCY_MASK
                   ^ SORT_PASS_MASK
-                  ^ SORT_VIEW_MASK), overlap_draw);
+                  ^ SORT_VIEW_MASK));
 TZ_STATIC_ASSERT((0 | SORT_COMMAND_MASK
                   | SORT_CMD_FLG_MASK
                   | SORT_TRANSLUCENCY_MASK
@@ -105,7 +105,7 @@ TZ_STATIC_ASSERT((0 | SORT_COMMAND_MASK
                   ^ SORT_CMD_FLG_MASK
                   ^ SORT_TRANSLUCENCY_MASK
                   ^ SORT_PASS_MASK
-                  ^ SORT_VIEW_MASK), overlap_command);
+                  ^ SORT_VIEW_MASK));
 
 MaterialID create_material_id(ShaderProgramID program, TextureID* textures, size_t num_textures)
 {

@@ -1,7 +1,5 @@
 #include <tzengine.h>
 
-#include <tzhandle.h>
-
 using namespace tz;
 
 struct Vertex
