@@ -1,6 +1,4 @@
 #pragma once
-#include <SDL2/SDL.h>
-#include <GL/glew.h>
 #include <glm/glm.hpp>
 #include <thirdparty/bitsquid-foundation-git/array.h>
 
@@ -10,75 +8,73 @@
 
 namespace tz
 {
-// GL stuff
+
 typedef glm::vec3 Color;
 
-typedef GLuint TextureID;
-typedef GLuint VertexBufferID;
-typedef GLuint VertexArrayID;
-typedef GLuint IndexArrayID;
-typedef GLuint UniformBufferID;
+typedef uint32_t TextureID;
+typedef uint32_t VertexBufferID;
+typedef uint32_t VertexArrayID;
+typedef uint32_t IndexArrayID;
+typedef uint32_t UniformBufferID;
 
-typedef GLuint FrameBufferID;
+typedef uint32_t FrameBufferID;
 
-typedef GLuint ShaderID;
-typedef GLuint ShaderProgramID;
+typedef uint32_t ShaderID;
+typedef uint32_t ShaderProgramID;
 
-enum DrawType : GLenum
+enum DrawType
 {
-  POINTS = GL_POINTS,                       
-  LINES = GL_LINES,                          
-  LINE_LOOP = GL_LINE_LOOP,
-  LINE_STRIP = GL_LINE_STRIP,
-  TRIANGLES = GL_TRIANGLES,
-  TRIANGLE_STRIP = GL_TRIANGLE_STRIP,                 
-  TRIANGLE_FAN = GL_TRIANGLE_FAN
+  POINTS,                       
+  LINES,                          
+  LINE_LOOP,
+  LINE_STRIP,
+  TRIANGLES,
+  TRIANGLE_STRIP,                 
+  TRIANGLE_FAN
 };
 
-enum TextureType : GLenum
+enum TextureType
 {
-  TEXTURE_1D = GL_TEXTURE_1D,
-  TEXTURE_2D = GL_TEXTURE_2D,
-  TEXTURE_3D = GL_TEXTURE_3D,
-  TEXTURE_1D_ARRAY = GL_TEXTURE_1D_ARRAY,
-  TEXTURE_2D_ARRAY = GL_TEXTURE_2D_ARRAY,
-  TEXTURE_RECTANGLE = GL_TEXTURE_RECTANGLE,
-  TEXTURE_CUBE_MAP = GL_TEXTURE_CUBE_MAP,
-  TEXTURE_CUBE_MAP_ARRAY = GL_TEXTURE_CUBE_MAP_ARRAY,
-  TEXTURE_BUFFER = GL_TEXTURE_BUFFER,
-  TEXTURE_2D_MULTISAMPLE = GL_TEXTURE_2D_MULTISAMPLE,
-  TEXTURE_2D_MULTISAMPLE_ARRAY = GL_TEXTURE_2D_MULTISAMPLE_ARRAY
+  TEXTURE_1D,
+  TEXTURE_2D,
+  TEXTURE_3D,
+  TEXTURE_1D_ARRAY,
+  TEXTURE_2D_ARRAY,
+  TEXTURE_RECTANGLE,
+  TEXTURE_CUBE_MAP,
+  TEXTURE_CUBE_MAP_ARRAY,
+  TEXTURE_BUFFER,
+  TEXTURE_2D_MULTISAMPLE,
+  TEXTURE_2D_MULTISAMPLE_ARRAY
 };
 
-enum ShaderType : GLenum
+enum ShaderType
 {
-  VERTEX_SHADER = GL_VERTEX_SHADER,
-  TESS_CONTROL_SHADER =  GL_TESS_CONTROL_SHADER,
-  TESS_EVALUATION_SHADER = GL_TESS_EVALUATION_SHADER,
-  GEOMETRY_SHADER = GL_GEOMETRY_SHADER,
-  FRAGMENT_SHADER = GL_FRAGMENT_SHADER,
-  COMPUTE_SHADER = GL_COMPUTE_SHADER
+  VERTEX_SHADER,
+  TESS_CONTROL_SHADER,
+  TESS_EVALUATION_SHADER,
+  GEOMETRY_SHADER,
+  FRAGMENT_SHADER,
+  COMPUTE_SHADER
 };
 
-enum DataType : GLenum
+enum DataType
 {
-  UNSIGNED_BYTE = GL_UNSIGNED_BYTE,
-  UNSIGNED_SHORT = GL_UNSIGNED_SHORT,
-  UNSIGNED_INT = GL_UNSIGNED_INT,
-  FLOAT = GL_FLOAT  
+  UNSIGNED_BYTE,
+  UNSIGNED_SHORT,
+  UNSIGNED_INT,
+  FLOAT  
 };
 
-enum BufferBits : GLbitfield
+enum BufferBits
 {
-  COLOR_BUFFER_BIT = GL_COLOR_BUFFER_BIT,
-  DEPTH_BUFFER_BIT = GL_DEPTH_BUFFER_BIT,
-  ACCUM_BUFFER_BIT = GL_ACCUM_BUFFER_BIT,
-  STENCIL_BUFFER_BIT = GL_STENCIL_BUFFER_BIT
+  COLOR_BUFFER_BIT = 1,
+  DEPTH_BUFFER_BIT = 1 << 1,
+  ACCUM_BUFFER_BIT = 1 << 2,
+  STENCIL_BUFFER_BIT = 1 << 3
 };
 
-typedef GLbitfield GraphicsBitfield;
-
-//
+typedef uint32_t GraphicsBitfield;
 
 size_t get_type_size(DataType data_type);
 
@@ -139,20 +135,4 @@ struct Sprite
 };
 
 void create_sprite(Sprite* sprite, glm::vec2 texture_offset, glm::vec2 sprite_dims, Texture* texture, Color color = { 1.0f, 1.0f, 1.0f });
-
-////////////////////////////////////////////////////////////////////////////////
-// Assets
-////////////////////////////////////////////////////////////////////////////////
-
-// Textures
-GameError load_image_as_texture(int* width, int* height, Texture* texture, const char* pathname);
-void destroy_texture(Texture* texture);
-
-// Shaders
-ShaderID load_shader_source(const char* pathname, ShaderType shader_type);
-void destroy_shader(ShaderID shader);
-ShaderProgramID link_shader_program(ShaderID* shaders, size_t num_shaders, const VertexAttribArray& vertex_spec);
-void destroy_program(ShaderProgramID program);
-GameError detach_shaders(ShaderProgramID program, ShaderID* shaders, size_t num_shaders);
-
 }

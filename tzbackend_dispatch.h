@@ -1,61 +1,63 @@
 #pragma once
 
 #include "tzrender_types.h"
-#include "tzrendering.h"
+#include "tzcommand_buffer.h"
 
 namespace tz
 {
-  namespace renderer
-  {    
-    ////////////////////////////////////////////////////////////////////////////////
-    // Backend commands
-    ////////////////////////////////////////////////////////////////////////////////
+namespace renderer
+{
+  ////////////////////////////////////////////////////////////////////////////////
+  // Backend commands
+  ////////////////////////////////////////////////////////////////////////////////
+    
+#define TZ_BACKEND_DISPATCH_FUNC static Command::DispatchFunction dispatch;
 
-    struct UploadNUniforms
-    {    
-      bool transpose;
-      int location;
-      size_t n;
-      enum Type
-	{
-	  INT,
-	  FLOAT,
-	  VEC2,
-	  VEC3,
-	  VEC4,
-	  MAT4
-	} type;    
-    };
-  
-    struct DrawIndexed
+  struct UploadNUniforms
+  {
+    TZ_BACKEND_DISPATCH_FUNC
+    
+    bool transpose;
+    int location;
+    size_t n;
+    enum Type
     {
-      VertexArrayID vao;
-      DrawType draw_type;
-    
-      size_t start_index;
-      size_t num_indices;
-      DataType indices_type;
-
-      Material material;
-    };
+      INT,
+      FLOAT,
+      VEC2,
+      VEC3,
+      VEC4,
+      MAT4
+    } type;    
+  };
   
-    struct DrawIndexedInstanced
-    {    
-      VertexArrayID vao;
-      DrawType draw_type;
+  struct DrawIndexed
+  {
+    TZ_BACKEND_DISPATCH_FUNC
     
-      size_t start_index;
-      size_t num_indices;
-      size_t instances;
-      DataType indices_type;
+    VertexArrayID vao;
+    DrawType draw_type;
+    
+    size_t start_index;
+    size_t num_indices;
+    size_t instances;
+    DataType indices_type;
 
-      Material material;
-    };
+    Material material;
+  };
 
-    ////////////////////////////////////////////////////////////////////////////////
-    // Backend functions
-    ////////////////////////////////////////////////////////////////////////////////
-    void clear_backbuffer(GraphicsBitfield buffer_bits);
   
+#define TZ_BACKEND_DISPATCH_API_DECL(command_name, backend)		\
+  static void _##command_name(void* data);				
+  
+#define TZ_GRAPHICS_BACKEND(backend)					\
+  TZ_BACKEND_DISPATCH_API_DECL(UploadNUniforms, backend);		\
+  TZ_BACKEND_DISPATCH_API_DECL(DrawIndexed, backend);			\
+  static void bind_commands()						\
+  {									\
+    UploadNUniforms::dispatch = backend::_UploadNUniforms;		\
+    DrawIndexed::dispatch = backend::_DrawIndexed;			\
   }
+  
+}
 }

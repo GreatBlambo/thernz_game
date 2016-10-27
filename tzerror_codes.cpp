@@ -39,7 +39,7 @@ void error(const char* fmt, ...)
 
   va_start(argptr, fmt);
   fprintf(stderr, "ERROR: ");
-  fprintf(stderr, fmt, argptr);
+  vfprintf(stderr, fmt, argptr);
   fprintf(stderr, "\n");
   va_end(argptr);
 }
@@ -47,10 +47,10 @@ void error(const char* fmt, ...)
 void fatal_error(const char* fmt, ...)
 {
   va_list argptr;
-  
+
   va_start(argptr, fmt);
   fprintf(stderr, "FATAL ERROR: ");
-  fprintf(stderr, fmt, argptr);
+  vfprintf(stderr, fmt, argptr);
   fprintf(stderr, "\n");
   va_end(argptr);
 
