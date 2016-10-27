@@ -149,6 +149,7 @@ int main(int, char**)
     dc->material.num_textures = 0;
     dc->instances = 0;
 
+    renderer::clear_backbuffer(COLOR_BUFFER_BIT | DEPTH_BUFFER_BIT);
     command_buffer.sort();
     command_buffer.submit();
     command_buffer.reset();
