@@ -11,7 +11,7 @@ namespace tz
   TZ_BITFIELD_START(name, type);				\
   TZ_BITFIELD_ENTRY(index, N, 0);				\
   TZ_BITFIELD_ENTRY(generation, (sizeof(type) * 8) - N, N);	\
-  TZ_BITFIELD_END(name);
+  TZ_BITFIELD_END(name);	
   
   template <typename HandleType>
   class HandleSet
