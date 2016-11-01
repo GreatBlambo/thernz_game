@@ -1,4 +1,5 @@
 #include "tzrender_types.h"
+#include "tzrender_types_gl.h"
 
 #include <GL/glew.h>
 #include <SDL2/SDL.h>
@@ -32,13 +33,6 @@ GameError init_graphics()
   }
     
   g_main_window = SDL_CreateWindow("", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 0, 0, SDL_WINDOW_OPENGL);
-
-  g_context = SDL_GL_CreateContext(g_main_window);
-  if (!g_context)
-  {
-    printf("Failed to create OpenGL context: %s\n", SDL_GetError());
-    return ERROR_OPENGL;
-  }
   
   // Set our OpenGL version.
   // SDL_GL_CONTEXT_CORE gives us only the newer version, deprecated functions are disabled
@@ -53,6 +47,13 @@ GameError init_graphics()
 
   SDL_GL_SetSwapInterval(1);
 
+  g_context = SDL_GL_CreateContext(g_main_window);
+  if (!g_context)
+  {
+    printf("Failed to create OpenGL context: %s\n", SDL_GetError());
+    return ERROR_OPENGL;
+  }
+  
   // Init GLEW
   glewExperimental = GL_TRUE;
   GLenum glew_err = glewInit();
@@ -183,14 +184,14 @@ ShaderID load_shader_source(const char* pathname, ShaderType shader_type)
   }
   shader_string_buffer[file_size] = 0;
 
-  result = glCreateShader(shader_type);
+  result = glCreateShader(renderer::get_shader_type(shader_type));
   glShaderSource(result, 1, &shader_string_buffer, (int*) &file_size);
   glCompileShader(result);
 
   int is_compiled;
   glGetShaderiv(result, GL_COMPILE_STATUS, (int*) &is_compiled);
 
-  if (!is_compiled)
+  if (!(is_compiled == GL_TRUE))
   {
     printf("Compile issue:");
     char error_buff[ERROR_BUFF_SIZE];

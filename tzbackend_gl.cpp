@@ -77,20 +77,20 @@ TZ_BACKEND_DISPATCH_API_IMPL(BackendGL, DrawIndexed)
   bind_vao(command->vao);
   bind_material(command->material);
 
-  if (command->instances == 0)
+  if (command->instances > 1)
+  {
+    glDrawElementsInstanced(get_draw_type(command->draw_type),
+                            command->num_indices,
+                            get_data_type(command->indices_type),
+                            (const void*) (get_type_size(command->indices_type) * command->start_index),
+                            command->instances);
+  }
+  else if (command->instances == 1)
   {
     glDrawElements(get_draw_type(command->draw_type),
                    command->num_indices,
-                   command->indices_type,
+                   get_data_type(command->indices_type),
                    (const void*) (get_type_size(command->indices_type) * command->start_index));
-  }
-  else
-  {
-    glDrawElementsInstanced(get_draw_type(command->draw_type),
-                          command->num_indices,
-                          command->indices_type,
-                          (const void*) (get_type_size(command->indices_type) * command->start_index),
-                          command->instances);
   }
 }
 

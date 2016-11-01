@@ -1,4 +1,5 @@
 #include <tzengine.h>
+#include <tzrender_types_gl.h>
 
 using namespace tz;
 
@@ -104,7 +105,7 @@ int main(int, char**)
     VertexAttribute& attrib = vert_spec[i];
     glEnableVertexAttribArray(attrib.location);
     glVertexAttribPointer(attrib.location, attrib.size,
-                          attrib.type, false, vert_spec.vert_size, (const void*) attrib.offset);
+                          renderer::get_data_type(attrib.type), false, vert_spec.vert_size, (const void*) attrib.offset);
   }
   
   glBindVertexArray(0);
@@ -147,7 +148,7 @@ int main(int, char**)
     dc->indices_type = UNSIGNED_BYTE;
     dc->material.shader = program;
     dc->material.num_textures = 0;
-    dc->instances = 0;
+    dc->instances = 1;
 
     renderer::clear_backbuffer(COLOR_BUFFER_BIT | DEPTH_BUFFER_BIT);
     command_buffer.sort();

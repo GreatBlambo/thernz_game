@@ -1,6 +1,10 @@
 #pragma once
 #include "tzrender_types.h"
 
+#include <GL/glew.h>
+#include <SDL2/SDL.h>
+#include <SDL2/SDL_image.h>
+
 namespace tz
 {
 namespace renderer
