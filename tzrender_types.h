@@ -8,19 +8,28 @@
 
 namespace tz
 {
-
+  
+TZ_HANDLE(ResourceHandle, uint32_t, 21);
+struct ShaderHandle  { ResourceHandle id; };
+struct ProgramHandle { ResourceHandle id; };
+struct TextureHandle { ResourceHandle id; };
+struct BindingHandle { ResourceHandle id; };
+struct BufferHandle  { ResourceHandle id; };
+  
 typedef glm::vec3 Color;
 
-typedef uint32_t TextureID;
-typedef uint32_t VertexBufferID;
-typedef uint32_t VertexArrayID;
-typedef uint32_t IndexArrayID;
-typedef uint32_t UniformBufferID;
-
-typedef uint32_t FrameBufferID;
-
-typedef uint32_t ShaderID;
-typedef uint32_t ShaderProgramID;
+enum BufferUsage
+{
+  STREAM_DRAW,
+  STREAM_READ,
+  STREAM_COPY,
+  STATIC_DRAW,
+  STATIC_READ,
+  STATIC_COPY,
+  DYNAMIC_DRAW,
+  DYNAMIC_READ,
+  DYNAMIC_COPY
+};
 
 enum DrawType
 {
@@ -109,7 +118,7 @@ void push_attrib(VertexAttribArray& array, const char* name, int location, int s
 
 struct Texture
 {
-  TextureID texture_id;
+  TextureHandle texture_id;
   TextureType type;
 };
 
@@ -119,7 +128,7 @@ struct Texture
 
 struct Material
 {
-  ShaderProgramID shader;
+  ProgramHandle shader;
   Texture textures[TZ_CONFIG_MAX_NUM_SAMPLERS];
   size_t num_textures;
 };

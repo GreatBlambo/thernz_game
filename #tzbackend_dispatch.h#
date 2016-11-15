@@ -54,12 +54,6 @@ namespace renderer
     Material material;
   };
 
-  struct ClearBackbuffer
-  {
-    TZ_BACKEND_DISPATCH_FUNC(DrawIndexed)
-    graphics::Backend* backend;
-
-    GraphicsBitfield bitfield;
-  };  
+  
 }
 }

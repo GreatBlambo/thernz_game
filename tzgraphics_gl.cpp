@@ -15,8 +15,7 @@ static SDL_Window* g_main_window = 0;
 static SDL_GLContext g_context = 0;
   
 GameError init_graphics()
-{  // Load modules
-
+{
   // Init SDL video
   if (SDL_Init(SDL_INIT_VIDEO) < 0)
   {

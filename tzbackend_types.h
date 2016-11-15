@@ -10,17 +10,10 @@
 namespace tz
 {
   namespace graphics
-  {  
-    TZ_HANDLE(ResourceHandle, uint32_t, 21);
-    struct ShaderHandle  { ResourceHandle id; };
-    struct ProgramHandle { ResourceHandle id; };
-    struct TextureHandle { ResourceHandle id; };
-    struct BindingHandle { ResourceHandle id; };
-      
+  {    
     class Backend
     {
     public:
-      typedef HandleSet<ResourceHandle> ResourceHandleSet;
       
       virtual void init() = 0;
       virtual void deinit() = 0;
@@ -30,6 +23,7 @@ namespace tz
       virtual void set_window_fullscreen() = 0;
       virtual void set_window_fullscreen_windowed() = 0;
       virtual void set_window_windowed() = 0;
+      virtual void set_window_position(int x, int y) = 0;
       
       virtual void swap_backbuffer() = 0;
 
@@ -40,30 +34,44 @@ namespace tz
 					 const VertexAttribArray& vert_spec) = 0;
       virtual void destroy_program(ProgramHandle program) = 0;
 
-      virtual TextureHandle load_texture(const char* pathname) = 0;
-      virtual void destroy_texture(TextureHandle texture) = 0;
+      virtual Texture load_texture(const char* pathname, int* width, int* height) = 0;
+      virtual void destroy_texture(Texture& texture) = 0;
       
-      virtual BindingHandle create_indexed_binding(const VertexAttribArray& vert_spec) = 0;
-      virtual void destroy_binding(BindingHandle binding) = 0;
-    };
-    
+      virtual BufferHandle create_buffer(void* data, size_t data_size, BufferUsage usage) = 0;
+      virtual void destroy_buffer(BufferHandle handle) = 0;
+      
+      virtual BindingHandle create_indexed_binding(const VertexAttribArray& vert_spec,
+						   BufferHandle vertices_buffer,
+						   BufferHandle indices_buffer) = 0;
+      virtual void destroy_binding(BindingHandle handle) = 0;
+
+      // Command dispatch
+      virtual void dispatch(UploadNUniforms* command) = 0;
+      virtual void dispatch(DrawIndexed* command) = 0;
+      virtual void dispatch(ClearBackbuffer* command) = 0;
+    };    
     
     class BackendGL : Backend
     {
     public:
-      BackendGL(foundation::Allocator& allocator)
+      BackendGL(size_t reserve_ids, foundation::Allocator& allocator)
         : m_main_window(0)
 	, m_context(0)
 	, m_gl_object_ids(allocator)
-	{}
+	, m_resource_handles(reserve_ids, allocator)
+	{
+	  foundation::array::reserve(m_gl_object_ids, reserve_ids);
+	}
+      
       void init();
       void deinit();
-        
+
       void set_window_name(const char* name);
       void set_window_size(int width, int height);
       void set_window_fullscreen();
       void set_window_fullscreen_windowed();
       void set_window_windowed();
+      void set_window_position(int x, int y);
       
       void swap_backbuffer();
 
@@ -74,23 +82,34 @@ namespace tz
 				 const VertexAttribArray& vert_spec);
       void destroy_program(ProgramHandle program);
 
-      TextureHandle load_texture(const char* pathname);
-      void destroy_texture(TextureHandle texture);
+      Texture load_texture(const char* pathname, int* width, int* height);
+      void destroy_texture(Texture& texture);
+
+      BufferHandle create_buffer(void* data, size_t data_size, BufferUsage usage);
+      void destroy_buffer(BufferHandle handle);
       
-      BindingHandle create_indexed_binding(const VertexAttribArray& vert_spec);
+      BindingHandle create_indexed_binding(const VertexAttribArray& vert_spec,
+					   BufferHandle vertices_buffer,
+					   BufferHandle indices_buffer);
       void destroy_binding(BindingHandle binding);
 
+      // Command dispatch
+      void dispatch(UploadNUniforms* command);
+      void dispatch(DrawIndexed* command);
+      void dispatch(ClearBackbuffer* command);
+
     private:
-      Backend::ResourceHandleSet* m_resource_handles;
+      ResourceHandle push_id(GLuint id);
+      inline get_id(ResourceHandle handle)
+      {
+	return m_gl_object_ids[handle.index()];
+      }
+      
+      HandleSet<ResourceHandle> m_resource_handles;
       foundation::Array<GLuint> m_gl_object_ids;
       
       SDL_Window* m_main_window;
       SDL_GLContext m_context;
     };
-  }
-  
-  namespace renderer
-  {
-    TZ_GRAPHICS_BACKEND(BackendGL);
   }
 }
