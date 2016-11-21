@@ -11,37 +11,6 @@ namespace tz
 namespace graphics
 {
 
-static void bind_material(Material& material)
-{
-  static Material s_material = {0};
-  
-  if (s_material.shader != material.shader)
-  {
-    s_material.shader = material.shader;
-    glUseProgram(s_material.shader);
-  }
-  
-  for (size_t i = 0; i < material.num_textures; i++)
-  {
-    if (s_material.textures[i].texture_id != material.textures[i].texture_id)
-    {
-      s_material.textures[i] = material.textures[i];
-      glActiveTexture(GL_TEXTURE0 + i);
-      glBindTexture(s_material.textures[i].texture_id, s_material.textures[i].type);
-    }
-  }
-};
-
-static void bind_vao(VertexArrayID vao)
-{
-  static VertexArrayID s_vao = 0;
-  if (s_vao != vao)
-  {
-    s_vao = vao;
-    glBindVertexArray(s_vao);
-  }
-}
-
 ////////////////////////////////////////////////////////////////////////////////
 // BackendGL
 ////////////////////////////////////////////////////////////////////////////////
@@ -63,7 +32,7 @@ void BackendGL::init()
     return ERROR_SDL;
   }
     
-  g_main_window = SDL_CreateWindow("", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 0, 0, SDL_WINDOW_OPENGL);
+  m_main_window = SDL_CreateWindow("", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 0, 0, SDL_WINDOW_OPENGL);
   
   // Set our OpenGL version.
   // SDL_GL_CONTEXT_CORE gives us only the newer version, deprecated functions are disabled
@@ -78,8 +47,8 @@ void BackendGL::init()
 
   SDL_GL_SetSwapInterval(1);
 
-  g_context = SDL_GL_CreateContext(g_main_window);
-  if (!g_context)
+  m_context = SDL_GL_CreateContext(m_main_window);
+  if (!m_context)
   {
     printf("Failed to create OpenGL context: %s\n", SDL_GetError());
     return ERROR_OPENGL;
@@ -98,46 +67,46 @@ void BackendGL::init()
 
 void BackendGL::deinit()
 {
-  SDL_GL_DeleteContext(g_context);
-  SDL_DestroyWindow(g_main_window);
+  SDL_GL_DeleteContext(m_context);
+  SDL_DestroyWindow(m_main_window);
   SDL_Quit();
 }  
 
 void BackendGL::set_window_name(const char* name)
 {
-  SDL_SetWindowTitle(g_main_window, name);
+  SDL_SetWindowTitle(m_main_window, name);
 }
 
 void BackendGL::set_window_size(int width, int height)
 {
-  SDL_SetWindowSize(g_main_window, width, height);
-  SDL_SetWindowPosition(g_main_window, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED);
+  SDL_SetWindowSize(m_main_window, width, height);
+  SDL_SetWindowPosition(m_main_window, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED);
   glViewport(0, 0, width, height);
 }
 
 void BackendGL::set_window_fullscreen()
 {
-  SDL_SetWindowFullscreen(g_main_window, SDL_WINDOW_FULLSCREEN);
+  SDL_SetWindowFullscreen(m_main_window, SDL_WINDOW_FULLSCREEN);
 }
 
 void BackendGL::set_window_fullscreen_windowed()
 {
-  SDL_SetWindowFullscreen(g_main_window, SDL_WINDOW_FULLSCREEN_DESKTOP);
+  SDL_SetWindowFullscreen(m_main_window, SDL_WINDOW_FULLSCREEN_DESKTOP);
 }
 
 void BackendGL::set_window_windowed()
 {
-  SDL_SetWindowFullscreen(g_main_window, 0);
+  SDL_SetWindowFullscreen(m_main_window, 0);
 }
 
 void BackendGL::set_window_position(int x, int y)
 {
-  SDL_SetWindowPosition(g_main_window, x, y);
+  SDL_SetWindowPosition(m_main_window, x, y);
 }
 
 void BackendGL::swap_backbuffer()
 {
-  SDL_GL_SwapWindow(g_main_window);
+  SDL_GL_SwapWindow(m_main_window);
 }
 
 ResourceHandle BackendGL::push_id(GLuint id)
@@ -350,6 +319,38 @@ void BackendGL::destroy_binding(BindingHandle binding)
 ////////////////////////////////////////////////////////////////////////////////
 // Backend commands
 ////////////////////////////////////////////////////////////////////////////////
+
+void BackendGL::bind_material(Material& material)
+{
+  static Material s_material = {0};
+  
+  if (s_material.shader != material.shader)
+  {
+    s_material.shader = material.shader;
+    glUseProgram(s_material.shader);
+  }
+  
+  for (size_t i = 0; i < material.num_textures; i++)
+  {
+    if (s_material.textures[i].texture_id != material.textures[i].texture_id)
+    {
+      s_material.textures[i] = material.textures[i];
+      glActiveTexture(GL_TEXTURE0 + i);
+      glBindTexture(s_material.textures[i].texture_id, s_material.textures[i].type);
+    }
+  }
+};
+
+void BackendGL::bind_vao(BindingHandle binding)
+{
+  static GLuint s_vao = 0;
+  GLuint vao = get_id(binding.id);
+  if (s_vao != vao)
+  {
+    s_vao = vao;
+    glBindVertexArray(s_vao);
+  }
+}
 
 void BackendGL::dispatch(UploadNUniforms* uniform_command)
 {

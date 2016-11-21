@@ -14,6 +14,17 @@ namespace tz
     class Backend
     {
     public:
+      struct PipelineState
+      {
+	// Shaders
+        ShaderHandle vertex_shader;
+	ShaderHandle tess_control_shader;
+	ShaderHandle tess_eval_shader;
+	ShaderHandle geometry_shader;
+	ShaderHandle fragment_shader;
+	// Per-sample stuff
+	
+      };
       
       virtual void init() = 0;
       virtual void deinit() = 0;
@@ -38,11 +49,10 @@ namespace tz
       virtual void destroy_texture(Texture& texture) = 0;
       
       virtual BufferHandle create_buffer(void* data, size_t data_size, BufferUsage usage) = 0;
+      virtual void update_buffer(BufferHandle handle, size_t offset, void* data, size_t data_size) = 0;
       virtual void destroy_buffer(BufferHandle handle) = 0;
       
-      virtual BindingHandle create_indexed_binding(const VertexAttribArray& vert_spec,
-						   BufferHandle vertices_buffer,
-						   BufferHandle indices_buffer) = 0;
+      virtual BindingHandle create_binding(const VertexAttribArray& vert_spec) = 0;
       virtual void destroy_binding(BindingHandle handle) = 0;
 
       // Command dispatch
@@ -53,6 +63,12 @@ namespace tz
     
     class BackendGL : Backend
     {
+      struct Buffer
+      {
+	size_t offset;
+	size_t size;
+      };
+      
     public:
       BackendGL(size_t reserve_ids, foundation::Allocator& allocator)
         : m_main_window(0)
@@ -86,11 +102,10 @@ namespace tz
       void destroy_texture(Texture& texture);
 
       BufferHandle create_buffer(void* data, size_t data_size, BufferUsage usage);
+      void update_buffer(BufferHandle handle, size_t offset, void* data, size_t data_size);
       void destroy_buffer(BufferHandle handle);
       
-      BindingHandle create_indexed_binding(const VertexAttribArray& vert_spec,
-					   BufferHandle vertices_buffer,
-					   BufferHandle indices_buffer);
+      BindingHandle create_binding(const VertexAttribArray& vert_spec);
       void destroy_binding(BindingHandle binding);
 
       // Command dispatch
@@ -100,13 +115,20 @@ namespace tz
 
     private:
       ResourceHandle push_id(GLuint id);
-      inline get_id(ResourceHandle handle)
+      inline GLuint get_id(ResourceHandle handle)
       {
 	return m_gl_object_ids[handle.index()];
       }
+
+      void bind_material(Material& material);
+      void bind_vao(BindingHandle binding);
       
       HandleSet<ResourceHandle> m_resource_handles;
       foundation::Array<GLuint> m_gl_object_ids;
+
+      // We partition areas of big existing buffers
+      GLuint data_buffer;
+      GLuint index_buffer;
       
       SDL_Window* m_main_window;
       SDL_GLContext m_context;
