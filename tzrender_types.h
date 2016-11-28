@@ -10,14 +10,20 @@ namespace tz
 {
   
 TZ_HANDLE(ResourceHandle, uint32_t, 21);
-struct ShaderHandle  { ResourceHandle id; };
-struct ProgramHandle { ResourceHandle id; };
-struct TextureHandle { ResourceHandle id; };
-struct BindingHandle { ResourceHandle id; };
-struct BufferHandle  { ResourceHandle id; };
-  
+struct ShaderHandle        { ResourceHandle id; };
+struct ProgramHandle       { ResourceHandle id; };
+struct TextureHandle       { ResourceHandle id; };
+struct BindingHandle       { ResourceHandle id; };
+struct BufferHandle        { ResourceHandle id; };
+ 
 typedef glm::vec3 Color;
 
+enum BufferType
+{
+  VERTEX_BUFFER,
+  INDEX_BUFFER
+};
+ 
 enum BufferUsage
 {
   STREAM_DRAW,

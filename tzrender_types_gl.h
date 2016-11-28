@@ -9,6 +9,15 @@ namespace tz
 {
   namespace renderer
   {
+    inline GLenum get_buffer_type(BufferType buffer_type)
+    {
+      switch(buffer_type)
+      {
+      case VERTEX_BUFFER: return GL_ARRAY_BUFFER; break;
+      case INDEX_BUFFER: return GL_ELEMENT_ARRAY_BUFFER; break;
+      };
+    }
+    
     inline GLenum get_buffer_usage(BufferUsage buffer_usage)
     {
       switch (buffer_usage)

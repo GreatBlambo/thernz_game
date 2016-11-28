@@ -264,27 +264,19 @@ void BackendGL::destroy_texture(Texture& texture)
 
 BufferHandle BackendGL::create_buffer(void* data, size_t data_size, BufferUsage usage)
 {
-  GLuint buffer;
-  glGenBuffer(1, &buffer);
-  glBindBuffer(GL_ARRAY_BUFFER, buffer); // Binding doesnt matter, just uploading data
-  glBufferData(GL_ARRAY_BUFFER, data_size, data, get_buffer_usage(usage));
-  glBindBuffer(GL_ARRAY_BUFFER, 0);
-  return { push_id(buffer) };
+  // push onto vector of buffer ranges
+  // glSubBufferData the data onto the buffer range
+  return { push_id(buffer_num) };
 }
 
 void BackendGL::destroy_buffer(BufferHandle handle)
 {
   GLuint buf = get_id(handle.id);
-  glDeleteBuffers(1, &buf);
+  // delete buffer from array
 }
       
-BindingHandle BackendGL::create_indexed_binding(const VertexAttribArray& vert_spec,
-                                                BufferHandle vertices_buffer,
-                                                BufferHandle indices_buffer);
-
-{
-  GLuint vbo = get_id(vertices_buffer.id);
-  GLuint ibo = get_id(indices_buffer.id);
+BindingHandle BackendGL::create_binding(const VertexAttribArray& vert_spec);
+{  
   GLuint vao;
 
   glGenVertexArrays(1, &vao);
@@ -301,6 +293,8 @@ BindingHandle BackendGL::create_indexed_binding(const VertexAttribArray& vert_sp
                           false,
                           vert_spec.vert_size, (const void*) attrib.offset);
   }
+
+  // deal with offset somehow
   
   glBindVertexArray(0);
 
@@ -320,36 +314,18 @@ void BackendGL::destroy_binding(BindingHandle binding)
 // Backend commands
 ////////////////////////////////////////////////////////////////////////////////
 
-void BackendGL::bind_material(Material& material)
-{
-  static Material s_material = {0};
-  
-  if (s_material.shader != material.shader)
-  {
-    s_material.shader = material.shader;
-    glUseProgram(s_material.shader);
-  }
-  
-  for (size_t i = 0; i < material.num_textures; i++)
-  {
-    if (s_material.textures[i].texture_id != material.textures[i].texture_id)
-    {
-      s_material.textures[i] = material.textures[i];
-      glActiveTexture(GL_TEXTURE0 + i);
-      glBindTexture(s_material.textures[i].texture_id, s_material.textures[i].type);
-    }
-  }
-};
 
-void BackendGL::bind_vao(BindingHandle binding)
+void BackendGL::dispatch(SetPipelineState* command)
 {
-  static GLuint s_vao = 0;
-  GLuint vao = get_id(binding.id);
-  if (s_vao != vao)
-  {
-    s_vao = vao;
-    glBindVertexArray(s_vao);
-  }
+  // Set per sample stuff
+
+  // Bind vertex arrays, set shader program
+  glBindVertexArrays(get_id(command->vertex_format.id));
+  glUseProgram(get_id(command->shader_stages.id));
+}
+
+void BackendGL::dispatch(SetBuffer* command)
+{
 }
 
 void BackendGL::dispatch(UploadNUniforms* uniform_command)
@@ -377,9 +353,7 @@ void BackendGL::dispatch(UploadNUniforms* uniform_command)
 
 void BackendGL::dispatch(DrawIndexed* command);
 {
-  bind_vao(command->vao);
-  bind_material(command->material);
-
+  // deal with offsets somehow
   if (command->instances > 1)
   {
     glDrawElementsInstanced(get_draw_type(command->draw_type),
