@@ -12,19 +12,15 @@ namespace tz
   namespace graphics
   {
     class BackendGL : Backend
-    {
-      struct Buffer
-      {
-	size_t offset;
-	size_t size;
-      };
-      
+    {     
     public:
       BackendGL(size_t reserve_ids, foundation::Allocator& allocator)
         : m_main_window(0)
 	, m_context(0)
 	, m_gl_object_ids(allocator)
 	, m_resource_handles(reserve_ids, allocator)
+        , m_bindings(allocator)
+        , m_allocator(allocator)
 	{
 	  foundation::array::reserve(m_gl_object_ids, reserve_ids);
 	}
@@ -66,30 +62,22 @@ namespace tz
       void dispatch(ClearBackbuffer* command);
 
     private:
-      ResourceHandle push_id(GLuint id);
-      inline GLuint get_id(ResourceHandle handle)
+      ResourceHandle push_gl_id(GLuint id);
+      inline GLuint get_gl_id(ResourceHandle handle)
       {
 	return m_gl_object_ids[handle.index()];
       }
+
+      
       
       HandleSet<ResourceHandle> m_resource_handles;
       foundation::Array<GLuint> m_gl_object_ids;
+      foundation::Array<VertexAttribute*> m_bindings;
 
-      struct BufferRange
-      {
-        size_t start;
-        size_t end;
-      };
-      
-      HandleSet<ResourceHandle> m_buffer_range_handles; // stores buffer handles
-      foundation::Array<BufferRange> m_buffer_ranges; // stores buffer range handles
-      
-      // Array of VBOs
-      // We partition the vbo as create_buffer calls happen.
-      GLuint vbo;
-      GLuint ibo;
-      size_t current_offset;
-      
+      foundation::Allocator& m_allocator;
+
+      GLuint vao; // dummy vao
+            
       SDL_Window* m_main_window;
       SDL_GLContext m_context;
     };

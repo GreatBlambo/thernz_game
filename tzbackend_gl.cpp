@@ -62,11 +62,19 @@ void BackendGL::init()
     printf("Failed to initialize GLEW: %s\n", glewGetErrorString(glew_err));
     return ERROR_GLEW;
   }
+
+  // Dummy vao
+  vao = 0;
+  glGenVertexArrays(1, &vao);
+  glBindVertexArray(vao);
+  
   return NO_ERROR;
 }
 
 void BackendGL::deinit()
 {
+  glDeleteVertexArrays(1, &vao);
+  
   SDL_GL_DeleteContext(m_context);
   SDL_DestroyWindow(m_main_window);
   SDL_Quit();
@@ -274,16 +282,9 @@ void BackendGL::destroy_buffer(BufferHandle handle)
   GLuint buf = get_id(handle.id);
   // delete buffer from array
 }
-      
-BindingHandle BackendGL::create_binding(const VertexAttribArray& vert_spec);
-{  
-  GLuint vao;
 
-  glGenVertexArrays(1, &vao);
-  glBindVertexArray(vao);
-  glBindBuffer(GL_ARRAY_BUFFER, vbo);
-  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ibo);
-
+static void set_vertex_format(const VertexAttribArray& vert_spec)
+{
   for (size_t i = 0; i < foundation::array::size(vert_spec); i++)
   {
     VertexAttribute& attrib = vert_spec[i];
@@ -293,21 +294,19 @@ BindingHandle BackendGL::create_binding(const VertexAttribArray& vert_spec);
                           false,
                           vert_spec.vert_size, (const void*) attrib.offset);
   }
-
-  // deal with offset somehow
-  
-  glBindVertexArray(0);
-
-  glBindBuffer(GL_ARRAY_BUFFER, 0);
-  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-  
-  return { push_id(vao) };
+}
+      
+BindingHandle BackendGL::create_binding(const VertexAttribArray& vert_spec)
+{
+  // Copy vert_spec
+  VertexAttribArray* new_vert_spec = MAKE_NEW(m_allocator, VertexAttribArray, m_allocator);
+  foundation::array::push_back(m_bindings, new_vert_spec);
+  return { push_id(0) }; // temp
 }
 
 void BackendGL::destroy_binding(BindingHandle binding)
 {
   GLuint vao = get_id(binding.id);
-  glDeleteVertexArrays(1, &vao);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

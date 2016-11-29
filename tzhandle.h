@@ -15,13 +15,13 @@ namespace tz
   TZ_BITFIELD_END(name);	
   
   template <typename HandleType, size_t MIN_FREE_INDICES = 0>
-  class HandleSet
-  {
-  public:
+    class HandleSet
+    {
+    public:
     HandleSet(size_t reserve_handles, foundation::Allocator& allocator)
-      : m_alloc(allocator)
-      , m_generations(allocator)
-      , m_free_indices(allocator)
+    : m_alloc(allocator)
+    , m_generations(allocator)
+    , m_free_indices(allocator)
     {
       foundation::array::reserve(m_generations, reserve_handles);
       foundation::queue::reserve(m_free_indices, reserve_handles);
@@ -37,15 +37,15 @@ namespace tz
       HandleType handle;
       size_t index;
       if (foundation::queue::size(m_free_indices) > MIN_FREE_INDICES)
-      {
-        index = *foundation::queue::begin_front(m_free_indices);
-	foundation::queue::pop_front(m_free_indices);
-      }
+        {
+          index = *foundation::queue::begin_front(m_free_indices);
+          foundation::queue::pop_front(m_free_indices);
+        }
       else
-      {
-	index = foundation::array::size(m_generations);
-	foundation::array::push_back(m_generations, (uint32_t) 0);
-      }
+        {
+          index = foundation::array::size(m_generations);
+          foundation::array::push_back(m_generations, (uint32_t) 0);
+        }
 
       handle.set_index(index);
 
@@ -64,10 +64,19 @@ namespace tz
       TZ_ASSERT(m_generations[index] <= HandleType::max_generation, "No more generations available\n");
     }
     
-  private:
+    private:
     foundation::Array<uint32_t> m_generations;
     foundation::Queue<size_t> m_free_indices;
     
     foundation::Allocator& m_alloc;
+    };
+
+  template <typename HandleType, typename Value, size_t MIN_FREE_INDICES = 0>
+  class HandleMap
+  {
+  public:
+  private:
+  HandleSet<HandleType, MIN_FREE_INDICES> m_handle_set
+  foundation::Array<Value> m_values;
   };
 };
