@@ -110,13 +110,17 @@ struct VertexAttribute
   size_t offset;
 };
 
-struct VertexAttribArray : foundation::Array<VertexAttribute>
+struct VertexLayout
 {
-  VertexAttribArray(foundation::Allocator& alloc);
-  size_t vert_size;
-};
+  VertexLayout(const VertexAttribute* in_attribs, size_t in_num_attribs, foundation::Allocator& allocator);
+  VertexLayout(const VertexLayout& other, foundation::Allocator& allocator);
 
-void push_attrib(VertexAttribArray& array, const char* name, int location, int size, DataType type);
+  const VertexAttribute* attribs;
+  size_t num_attribs;  
+  size_t vert_size;
+
+  const VertexAttribute& operator[](uint32_t i) const;
+};
  
 ////////////////////////////////////////////////////////////////////////////////
 // Texture

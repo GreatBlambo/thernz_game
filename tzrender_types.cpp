@@ -33,31 +33,30 @@ size_t get_type_size(DataType data_type)
 // Vertex Specification
 ////////////////////////////////////////////////////////////////////////////////
 
-VertexAttribArray::VertexAttribArray(foundation::Allocator& alloc)
-  : foundation::Array<VertexAttribute>(alloc)
-{}
-
-void push_attrib(VertexAttribArray& array, const char* name, int location, int size, DataType type)
+VertexLayout::VertexLayout(const VertexAttribute* in_attribs, size_t in_num_attribs, foundation::Allocator& allocator)
+  : num_attribs(in_num_attribs)
+  , vert_size(0)
 {
-  VertexAttribute new_attrib;
-  strcpy(new_attrib.name, name);
-  new_attrib.location = location;
-  new_attrib.size = size;
-  new_attrib.type = type;
-
-  if (foundation::array::size(array) == 0)
+  attribs = allocator.allocate(num_attribs * sizeof(VertexAttribute));
+  memcpy(attribs, in_attribs, num_attribs * sizeof(VertexAttribute));
+  for (int i = 0; i < num_attribs; i++)
   {
-    new_attrib.offset = 0;
+    vert_size += attribs[i].offset + attribs[i].size;
   }
-  else
-  {
-    VertexAttribute& last = foundation::array::back(array);
-    new_attrib.offset = last.offset + (last.size * get_type_size(last.type));
-  }
+}
 
-  array.vert_size = new_attrib.offset + (size * get_type_size(type));
+VertexLayout(const VertexLayout& other, foundation::Allocator& allocator)
+  : num_attribs(other.num_attribs)
+  , vert_size(other.vert_size)
+{
+  
+  attribs = allocator.allocate(num_attribs * sizeof(VertexAttribute));
+  memcpy(attribs, other.attribs, num_attribs * sizeof(VertexAttribute));
+}
 
-  foundation::array::push_back(array, new_attrib);
+const VertexAttribute& VertexLayout::operator[](uint32_t i) const
+{
+  return attribs[i];
 }
 
 ////////////////////////////////////////////////////////////////////////////////

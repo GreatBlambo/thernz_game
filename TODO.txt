@@ -1,8 +1,12 @@
 * Tasks
-** TODO Handle arrays
+** TODO Finish GL dispatch and run on test
+** TODO Make an opaque handle type, probably a macro
+   - Private handle inside it
+   - Uses operators to access
+** DONE Handle arrays
 ** TODO Finish up slab allocator
 ** TODO Replace std::sort with some radix sort for renderer
-** TODO Create a bitsquid allocator that works on Buffer
+** DONE Create a bitsquid allocator that works on Buffer
 ** TODO Finish command buffer
 ** TODO Define command stuff wrt rendering
 ** TODO Uniform databases and uniform handles
@@ -15,6 +19,5 @@
 *** TODO Tracking entities
 *** TODO Scene graph component, or world position
 *** TODO Sprite component
-** TODO Create different typedefs of shader for each vertspec
 ** DONE Batching sprites together with instancing
 ** DONE Vertex specification struct to pass around.

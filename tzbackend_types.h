@@ -17,12 +17,10 @@ namespace tz
       BackendGL(size_t reserve_ids, foundation::Allocator& allocator)
         : m_main_window(0)
 	, m_context(0)
-	, m_gl_object_ids(allocator)
-	, m_resource_handles(reserve_ids, allocator)
-        , m_bindings(allocator)
+	, m_gl_object_map(reserve_ids, allocator)
+        , m_binding_map(reserve_ids, allocator)
         , m_allocator(allocator)
 	{
-	  foundation::array::reserve(m_gl_object_ids, reserve_ids);
 	}
       
       void init();
@@ -62,21 +60,12 @@ namespace tz
       void dispatch(ClearBackbuffer* command);
 
     private:
-      ResourceHandle push_gl_id(GLuint id);
-      inline GLuint get_gl_id(ResourceHandle handle)
-      {
-	return m_gl_object_ids[handle.index()];
-      }
-
-      
-      
-      HandleSet<ResourceHandle> m_resource_handles;
-      foundation::Array<GLuint> m_gl_object_ids;
-      foundation::Array<VertexAttribute*> m_bindings;
+      HandleMap<ResourceHandle, GLuint> m_gl_object_map;
+      HandleMap<ResourceHandle, VertexLayout> m_binding_map;
 
       foundation::Allocator& m_allocator;
 
-      GLuint vao; // dummy vao
+      GLuint m_vao; // dummy vao
             
       SDL_Window* m_main_window;
       SDL_GLContext m_context;

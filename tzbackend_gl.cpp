@@ -64,9 +64,9 @@ void BackendGL::init()
   }
 
   // Dummy vao
-  vao = 0;
-  glGenVertexArrays(1, &vao);
-  glBindVertexArray(vao);
+  m_vao = 0;
+  glGenVertexArrays(1, &m_vao);
+  glBindVertexArray(m_vao);
   
   return NO_ERROR;
 }
@@ -115,16 +115,6 @@ void BackendGL::set_window_position(int x, int y)
 void BackendGL::swap_backbuffer()
 {
   SDL_GL_SwapWindow(m_main_window);
-}
-
-ResourceHandle BackendGL::push_id(GLuint id)
-{
-  ResourceHandle result = m_resource_handles.create_handle();
-  if (result.index() < foundation::array::size(m_gl_object_ids))
-    m_gl_object_ids[result.index()] = id;
-  else
-    foundation::array::push_back(m_gl_object_ids, id);
-  return result;
 }
 
 ShaderHandle BackendGL::load_shader(const char* pathname, ShaderType shader_type)
@@ -178,13 +168,15 @@ ShaderHandle BackendGL::load_shader(const char* pathname, ShaderType shader_type
   free(shader_string_buffer);
   fclose(file);
   
-  return { push_id(result) };
+  return { m_gl_objects_map.add(result) };
 
 }
 
 void BackendGL::destroy_shader(ShaderHandle shader)
 {
-  glDeleteShader(get_id(shader.id));
+  if (!m_gl_objects_map.has(shader.id)) return;
+  glDeleteShader(m_gl_objects_map.get(shader.id));
+  m_gl_objects_map.remove(shader.id);
 }
 
 ProgramHandle BackendGL::link_program(ShaderHandle* shaders, size_t num_shaders,
@@ -219,12 +211,14 @@ ProgramHandle BackendGL::link_program(ShaderHandle* shaders, size_t num_shaders,
     TZ_ASSERT(false, "Shader linking error: %s", error_buff);
   }
   
-  return { push_id(program) };
+  return { m_gl_objects_map.add(program) };
 }
 
 void BackendGL::destroy_program(ProgramHandle program)
 {
-  glDeleteProgram(get_id(program.id));
+  if (!m_gl_objects_map.has(program.id)) return;
+  glDeleteProgram(m_gl_objects_map.get(program.id));
+  m_gl_objects_map.remove(program.id);
 }
 
 Texture BackendGL::load_texture(const char* pathname, int* width, int* height)
@@ -266,26 +260,63 @@ Texture BackendGL::load_texture(const char* pathname, int* width, int* height)
 
 void BackendGL::destroy_texture(Texture& texture)
 {
-  Gluint tex = get_id(texture.texture_id.id);
+  if (!m_gl_objects_map.has(texture.texture_id.id)) return;
+  Gluint tex = m_gl_objects_map.get(texture.texture_id.id);
   glDeleteTextures(1, &tex);
+
+  m_gl_objects_map.remove(texture.texture_id.id);
 }
 
 BufferHandle BackendGL::create_buffer(void* data, size_t data_size, BufferUsage usage)
 {
-  // push onto vector of buffer ranges
-  // glSubBufferData the data onto the buffer range
-  return { push_id(buffer_num) };
+  // create vbo
+  GLuint vbo;
+  glGenBuffers(1, &vbo);
+  glBindBuffer(GL_ARRAY_BUFFER, vbo);
+  glBufferData(GL_ARRAY_BUFFER, data_size, data, renderer::get_buffer_usage(usage));
+  glBindBuffer(GL_ARRAY_BUFFER, 0);
+  return { m_gl_object_map.add(vbo) };
 }
 
 void BackendGL::destroy_buffer(BufferHandle handle)
 {
-  GLuint buf = get_id(handle.id);
-  // delete buffer from array
+  m_gl_object_map.remove(handle.id);
+}
+      
+BindingHandle BackendGL::create_binding(const VertexLayout& vert_spec)
+{
+  // Copy vert_spec
+  VertexLayout new_vert_spec(vert_spec, m_allocator);
+  return { m_binding_map.add(new_vert_spec) };
 }
 
-static void set_vertex_format(const VertexAttribArray& vert_spec)
+BindingHandle BackendGL::create_binding(const VertexAttribute* vert_attribs, size_t num_attribs)
 {
-  for (size_t i = 0; i < foundation::array::size(vert_spec); i++)
+  VertexLayout new_vert_spec(vert_attribs, num_attribs, m_allocator);
+  return { m_binding_map.add(new_vert_spec) };
+}
+
+void BackendGL::destroy_binding(BindingHandle binding)
+{
+  m_binding_map.remove(binding.id);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// Backend commands
+////////////////////////////////////////////////////////////////////////////////
+
+void BackendGL::dispatch(SetPipelineState* command)
+{
+  // Set per sample stuff
+
+  // Bind vertex arrays, set shader program
+  
+  // bind vertex arrays
+  if (!m_binding_map.has(command->vertex_format))
+    return; // Vertex format was not registered. Abort
+
+  VertexLayout& vert_spec = m_binding_map.get(command->vertex_format);
+  for (size_t i = 0; i < vert_spec.num_attribs; i++)
   {
     VertexAttribute& attrib = vert_spec[i];
     glEnableVertexAttribArray(attrib.location);
@@ -294,37 +325,14 @@ static void set_vertex_format(const VertexAttribArray& vert_spec)
                           false,
                           vert_spec.vert_size, (const void*) attrib.offset);
   }
-}
-      
-BindingHandle BackendGL::create_binding(const VertexAttribArray& vert_spec)
-{
-  // Copy vert_spec
-  VertexAttribArray* new_vert_spec = MAKE_NEW(m_allocator, VertexAttribArray, m_allocator);
-  foundation::array::push_back(m_bindings, new_vert_spec);
-  return { push_id(0) }; // temp
-}
-
-void BackendGL::destroy_binding(BindingHandle binding)
-{
-  GLuint vao = get_id(binding.id);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-// Backend commands
-////////////////////////////////////////////////////////////////////////////////
-
-
-void BackendGL::dispatch(SetPipelineState* command)
-{
-  // Set per sample stuff
-
-  // Bind vertex arrays, set shader program
-  glBindVertexArrays(get_id(command->vertex_format.id));
-  glUseProgram(get_id(command->shader_stages.id));
+  
+  // set shader
+  glUseProgram(m_gl_object_map(command->shader_stages.id));
 }
 
 void BackendGL::dispatch(SetBuffer* command)
 {
+  
 }
 
 void BackendGL::dispatch(UploadNUniforms* uniform_command)

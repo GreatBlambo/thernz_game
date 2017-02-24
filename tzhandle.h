@@ -23,6 +23,17 @@ namespace tz
     , m_generations(allocator)
     , m_free_indices(allocator)
     {
+      reserve(reserve_handles);
+    }
+    
+    HandleSet(foundation::Allocator& allocator)
+    : m_alloc(allocator)
+    , m_generations(allocator)
+    , m_free_indices(allocator)
+    {}
+
+    void reserve(size_t reserve_handles)
+    {
       foundation::array::reserve(m_generations, reserve_handles);
       foundation::queue::reserve(m_free_indices, reserve_handles);
     }
@@ -75,8 +86,59 @@ namespace tz
   class HandleMap
   {
   public:
+
+  HandleMap(size_t reserve, foundation::Allocator& allocator)
+  : m_handle_set(reserve, allocator)
+  , m_values(allocator)
+  {
+    reserve(reserve);
+  }
+  
+  HandleMap(foundation::Allocator& allocator)
+  : m_handle_set(allocator)
+  , m_values(allocator)
+  {}
+
+  void reserve(size_t reserve)
+  {
+    foundation::array::reserve(m_values, reserve);
+  }
+
+  HandleType add(Value value)
+  {
+    HandleType handle = m_handle_set.create_handle();
+    size_t index = handle.index();
+    
+    if (index == foundation::array::size(m_values) + 1)
+      foundation::array::push_back(m_values, value);
+    else if (index < foundation::array::size(m_values))
+      m_values[index] = value;
+    else
+      TZ_ASSERT(false, "Handle index is invalid");
+
+    return handle;
+  }
+
+  void remove(HandleType handle)
+  {
+    m_handle_set.destroy_handle(handle);
+  }
+
+  bool has(HandleType handle)
+  {
+    return m_handle_set.handle_is_valid(handle);
+  }
+    
+  Value& get(HandleType handle)
+  {    
+    size_t index = handle.index();
+    TZ_ASSERT(index < foundation::array_size(m_values), "Handle index is invalid");
+
+    return m_values[index];
+  }
+  
   private:
-  HandleSet<HandleType, MIN_FREE_INDICES> m_handle_set
+  HandleSet<HandleType, MIN_FREE_INDICES> m_handle_set;
   foundation::Array<Value> m_values;
   };
 };

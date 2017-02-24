@@ -7,6 +7,7 @@
 #include <thirdparty/bitsquid-foundation-git/memory.h>
 
 #include "tzerror_codes.h"
+#include "tzshared.h"
 
 namespace tz
 {
@@ -16,11 +17,6 @@ namespace tz
 #define TZ_KILOBYTE(x) 1024u * x
 #define TZ_MEGABYTE(x) 1024u * TZ_KILOBYTE(x)
 #define TZ_GIGABYTE(x) 1024u * TZ_MEGABYTE(x)
-
-#define TZ_ARRAY_SIZE(x) sizeof(x)/sizeof(*x)
-
-#define TZ_BIT_MASK(bits) ((1ull << bits) - 1)
-#define TZ_MASK_GET(val, width, lsb) (val >> lsb) & TZ_BIT_MASK(width);
   
 ////////////////////////////////////////////////////////////////////////////////
 // Types
